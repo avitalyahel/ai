@@ -24,7 +24,7 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
    Skip this step when `~/Claude/sessions-watch` does not exist or is already a link.
 3. **Link the tool:** `mkdir -p ~/Claude && ln -sfn ~/git/agent-skills-sw/plugins/team/skills/session-driver/tool ~/Claude/sessions-watch`.
    Your own files there (`config.json`, `atlassian.conf`, `state.json`, `out/`, `work/`) are git-ignored.
-4. **Add the command:** `mkdir -p ~/.local/bin && ln -sfn ~/Claude/sessions-watch/sw ~/.local/bin/sw`. Make sure `~/.local/bin` is on your `PATH`.
+4. **Add the command:** `mkdir -p ~/.local/bin && ln -sfn ~/Claude/sessions-watch/sd ~/.local/bin/sd`. Make sure `~/.local/bin` is on your `PATH`.
 5. **Personal settings:** `cp ~/Claude/sessions-watch/config.example.json ~/Claude/sessions-watch/config.json`.
    - Fill in `userName` and `slackUserId`.
    - Leave `pages` empty: the first refresh creates both pages and saves their URLs.

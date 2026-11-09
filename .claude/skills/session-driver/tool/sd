@@ -1,5 +1,5 @@
 #!/bin/bash
-# sw — keeps the Home Sessions Watch and Code Sessions Watch pages current. Run `sw --help` for all of it.
+# sd — keeps the Home Sessions Watch and Code Sessions Watch pages current. Run `sd --help` for all of it.
 set -u
 
 DIR="$HOME/Claude/sessions-watch"
@@ -7,58 +7,40 @@ DEFAULT_INTERVAL="${SW_INTERVAL:-15m}"
 export PATH="$HOME/.local/bin:$HOME/.claude/local:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
 
 show_help() { cat <<'HELP'
-sw — keeps the Home and Code Sessions Watch pages current, cleans up after finished Code sessions,
+sd — keeps the Home and Code Sessions Watch pages current, cleans up after finished Code sessions,
 and wakes Code sessions when their PRs change.
 
 USAGE
-  sw                    one round now
-  sw --loop [INTERVAL]  a round now, then every INTERVAL (default 15m) while this window stays open
-  sw --check            collect only, no Claude: does anything need refreshing?
-  sw --status           what the pages hold now
-  sw --last             how the last Claude refresh ended
-  sw --trackers         Code sessions that may still run their own PR trackers
-  sw --watch-list       what is on the opt-in watch list
-  sw --hub              status only: are the Trackers Hub and the Scans Hub alive, and what is waiting for them
+  sd                    one round now
+  sd --loop [INTERVAL]  a round now, then every INTERVAL (default 15m) while this window stays open
+  sd --check            collect only, no Claude: does anything need refreshing?
+  sd --status           what the pages hold now
+  sd --last             how the last Claude refresh ended
+  sd --trackers         Code sessions that may still run their own PR trackers
+  sd --watch-list       what is on the opt-in watch list
+  sd --hub              status only: are the Trackers Hub and the Scans Hub alive, and what is waiting for them
                         (the hubs are sessions in the app, not options here)
-  sw --help, -h         this text
+  sd --help, -h         this text
 
-EACH ROUND
-  - Collect sessions, branches and PRs on this Mac, without Claude.
-  - Only if something changed: the refresh runs as subagents of the Scans Hub when it is running (no new
-    session), else a short Claude session (Haiku) refreshes and publishes both pages.
-  - Scans in config.json ("scans") are queued for the Scans Hub at their times.
-  - Cleanup and PR watch run every round.
+Each round
+Collects sessions, branches and PRs without Claude, then refreshes pages (via the Scans Hub or a short Claude session) only when something changed, and always runs cleanup and PR watch.
 
-DONE RULES
-  - Archived, or marked done by you -> Done.
-  - Code: every branch/PR merged (or someone else's PR you approved) -> Done; anything still open -> never Done.
-  - Home: Claude's reading decides; your done mark and archiving also count.
+Done rules
+A session is Done when it is archived, marked done by you, or (on Code) every branch and PR is merged or approved; anything still open stays Partial.
 
-CLEANUP (Code)
-  - Worktrees of merged work are removed, never forced, never with uncommitted files.
-  - Space reclaim when work/reclaim.mode is "on"; transcripts are never touched.
+Cleanup
+Removes worktrees of merged work (never forced, never with uncommitted files) and reclaims space when work/reclaim.mode is on; transcripts are never touched.
 
-TRACKERS HUB
-  - sw never resumes sessions itself. It queues each message; the Trackers Hub, one Code session kept open
-    in the app (instructions: HUB.md), delivers it to the session through the app's messaging.
-  - Hub quiet for 15 min with messages waiting -> a Mac notification; open the hub and say "re-arm".
+Trackers hub
+Queues messages for the Trackers Hub (a Code session kept open in the app) to deliver; never resumes sessions itself, and notifies if the hub is quiet for 15 minutes with messages waiting.
 
-SCANS HUB
-  - One more Code session kept open in the app (instructions: SCANS.md). It runs the refresh and the scans
-    as subagents, so recurring work starts no session of its own. The Trackers Hub stays read-only.
-  - Not running, or it has not finished a refresh for 15 min: sw starts the Claude CLI session as before.
+Scans hub
+Runs the refresh and configured scans as subagents of a second Code session so recurring work starts no session of its own; falls back to a short Claude CLI session if the hub is down or slow.
 
-PR WATCH
-  - Open PRs are watched until merged; a change by others (review, comments, CI, conflicts, dismissed
-    approval, merge) sends the session a message.
-  - Also wakes on new commits or label changes by others; after fixing review comments the session re-requests review.
-  - Your own PRs: a re-request after 1 day without review (Sunday to Thursday only). Reviewer reminders are off.
-  - Also wakes a coordinator when sessions it started finish a turn, and a session when a Confluence page
-    it works on gets comments or edits by others; Google Docs and Claude Docs too (the hub reads their
-    comments every 10 min with its connectors; Confluence the same way when there is no API token).
-  - Never messages a running session; at most one message per session every 30 min; no force-push; merges only if told.
+Pr watch
+Watches open PRs and messages the owning session on changes by others (reviews, comments, CI, commits, labels, conflicts, merges), with cooldowns and no messages to running sessions.
 
-Details: ~/Claude/sessions-watch/README.md
+Details: tool/README.md
 HELP
 }
 usage() { show_help; exit 1; }
@@ -98,7 +80,7 @@ case "${1:-}" in
   *) usage ;;
 esac
 
-# Requirements (all OSes; on Windows run sw from Git Bash or WSL). watch.py also reports missing tools
+# Requirements (all OSes; on Windows run sd from Git Bash or WSL). watch.py also reports missing tools
 # on the pages' "Input check" line.
 command -v python3 >/dev/null || { echo "python3 not found on PATH (Python 3.8 or newer is needed)."; exit 1; }
 command -v gh >/dev/null || echo "Warning: gh (GitHub CLI) not found on PATH: PR states and the PR watch won't work."
@@ -181,7 +163,7 @@ if [ -z "$mins" ]; then
   exit $rc
 fi
 
-log "sw --loop: a round every $mins minute(s). Log: ${LOG/#$HOME/~}. Ctrl+C stops."
+log "sd --loop: a round every $mins minute(s). Log: ${LOG/#$HOME/~}. Ctrl+C stops."
 while true; do
   refresh_once
   pr_watch
