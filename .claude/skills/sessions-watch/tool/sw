@@ -17,7 +17,6 @@ USAGE
   sw --status           what the pages hold now
   sw --last             how the last Claude refresh ended
   sw --trackers         Code sessions that may still run their own PR trackers
-  sw --stop-trackers    ask those sessions to stop them (sw takes over); asks before doing it
   sw --watch-add KEY SESSION [TITLE]
                         also watch a Confluence page or Claude/Google Doc for a session (Home sessions too);
                         KEY: confluence:<page id> | cdoc:<doc id> | gdoc:<doc id>; SESSION: local_<app id> or session id
@@ -97,12 +96,6 @@ case "${1:-}" in
   --watch-add)  shift; exec python3 -I "$DIR/watch.py" watch-add "$@" ;;
   --watch-rm)   shift; exec python3 -I "$DIR/watch.py" watch-rm "$@" ;;
   --watch-list) exec python3 -I "$DIR/watch.py" watch-list ;;
-  --stop-trackers)
-    python3 -I "$DIR/watch.py" trackers || exit 1
-    printf "\nQueue a message for each session above (the Trackers Hub delivers it) asking it to stop its own PR trackers? [y/N] "
-    read -r ans
-    case "$ans" in y|Y|yes) exec python3 -I "$DIR/watch.py" trackers --stop ;; *) echo "Nothing done."; exit 0 ;; esac
-    ;;
   --loop)
     requested="${2:-$DEFAULT_INTERVAL}"
     mins=$(to_minutes "$requested") || exit 1

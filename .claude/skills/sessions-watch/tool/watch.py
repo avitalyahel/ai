@@ -3816,18 +3816,6 @@ def cmd_prwatch():
 TRACKER_RX = re.compile(r"watcher|\bmonitor\b|Monitor task|PR monitor|Auto-?fix|every \d+ ?(?:min|minutes|sec|s\b)|"
                         r"\bcron\b|CronCreate|/loop|wakes? (?:the|this) session|background (?:check|task|subagent|agent)",
                         re.I)
-STOP_PROMPT = (
-    "[From the Sessions Watch tool (sw) via the Trackers Hub, at the user's request, not typed by the user]\n"
-    "sw now keeps track of this session's PRs from outside the session, until they are merged or closed. "
-    "It messages this session (through the Trackers Hub) when a PR gets a review, comments, new commits by others, label changes, a CI result, "
-    "merge conflicts, a dismissed approval, or is merged or closed. It also messages a coordinator when sessions it started finish a turn, and "
-    "a session when a Confluence page it works on gets comments or edits by others.\n\n"
-    "Stop every tracker you started in this session for PR, review or reviewer-reminder tracking: background "
-    "watchers or polling loops (kill their processes), Monitor tasks (TaskStop), /loop or cron jobs (CronDelete), "
-    "scheduled wake-ups and PR subscriptions. Don't stop other work such as benchmarks, tests or builds. "
-    "If the app's PR monitor or Auto-fix is on for this session and you can't turn it off, say so. "
-    "From now on don't start new PR trackers in this session. Reply in one line listing what you stopped."
-)
 
 
 def tracker_sessions(state, days=7):
@@ -3852,11 +3840,10 @@ def tracker_sessions(state, days=7):
     return sorted(out, key=lambda x: x["lastTs"] or "", reverse=True)
 
 
-def cmd_trackers(stop=False):
-    """List Code sessions that may run their own PR trackers; with --stop, resume each to stop them."""
+def cmd_trackers():
+    """List Code sessions that may run their own PR trackers."""
     state = load_state()
     db = load_json(PRWATCH_PATH, {"prs": {}, "wakes": {}})
-    claude = shutil.which("claude")
     rows = tracker_sessions(state)
     if not rows:
         print("No Code session in the last 7 days shows a tracker or an open PR.")
@@ -3867,19 +3854,6 @@ def cmd_trackers(stop=False):
             r["title"], r["sid"][:8], "  (running now)" if r["running"] else "",
             "  (already asked %s)" % done[:16] if done else "",
             ", ".join(r["signs"]) or "none", ", ".join(r["open"]) or "none"))
-    if not stop:
-        return 0
-    asked = 0
-    for r in rows:
-        ev, err = hub_enqueue(r["sid"], "stop-trackers", r["title"], STOP_PROMPT)
-        if not ev:
-            print("SKIPPED (%s): %s" % (err, r["title"]))
-            continue
-        db.setdefault("stopped", {})[r["sid"]] = now_iso()
-        asked += 1
-        print("QUEUED: %s" % r["title"])
-    save_json(PRWATCH_PATH, db)
-    print("%d message(s) queued; the Trackers Hub delivers them (sw --hub shows what's waiting)." % asked)
     return 0
 
 
@@ -4071,7 +4045,7 @@ def main(argv):
         print(hub_line_text())
         return 0
     if cmd == "trackers":
-        return cmd_trackers(stop="--stop" in argv)
+        return cmd_trackers()
     if cmd == "done" and len(argv) >= 4:
         return cmd_done(argv[2], " ".join(argv[3:]))
     if cmd == "status":

@@ -56,7 +56,6 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
 | Mark a session done | `python3 -I ~/Claude/sessions-watch/watch.py done code <id, app id or title>` |
 | Watch a page or doc for any session (Home too) | `sw --watch-add confluence:<id>\|cdoc:<id>\|gdoc:<id> <session>` |
 | Are the hubs alive, what's waiting | `sw --hub` |
-| Stop sessions' own PR trackers | `sw --stop-trackers` |
 | Turn on space reclaim | `echo on > ~/Claude/sessions-watch/work/reclaim.mode` |
 
 ## Rules this tool relies on

@@ -12,7 +12,6 @@
 | `sw --status` | What the pages hold now. |
 | `sw --last` | How the last Claude refresh ended. |
 | `sw --trackers` | Code sessions that may still run their own PR trackers. |
-| `sw --stop-trackers` | Asks those sessions to stop them, so `sw` is the only tracker. Asks you first. |
 | `sw --hub` | Are the Trackers Hub and the Scans Hub alive, and which events are waiting for them. |
 | `sw --watch-add KEY SESSION [TITLE]` | Also watch a Confluence page or a Claude/Google Doc for a session, Home sessions included. See [Opt-in watch list](#opt-in-watch-list). |
 | `sw --watch-rm KEY` | Stop watching it. |
@@ -302,8 +301,7 @@ These apply when a session tracks a **peer review** (someone else's PR). They co
 Sessions used to track PRs themselves: 5-minute background watchers, Monitor tasks, `/loop` and cron jobs (for example, the reviewer reminders in `loop-self-review-response`), and the app's PR monitor. They stop when the session closes or hits a time limit.
 
 - `sw --trackers` lists Code sessions active in the last 7 days that show signs of a tracker or have an open PR.
-- `sw --stop-trackers` queues a message for each one (the hub delivers it) asking it to stop its own PR trackers: kill watcher processes, stop Monitor tasks, delete cron and `/loop` jobs. Other work, such as benchmarks or tests, is left alone. The replies show in each session in the app.
-- **New runs of your skills** (`loop-self-review-response`, `loop-peer-reviewer-responses`) still start their own watchers and cron jobs until the skills are told to rely on `sw` instead.
+- New runs of your skills (`loop-self-review-response`, `loop-peer-reviewer-responses`) still start their own watchers and cron jobs until the skills are told to rely on `sw` instead.
 
 ### Coordinator sessions
 
