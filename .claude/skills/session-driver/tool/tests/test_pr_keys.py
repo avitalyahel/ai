@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_pr_keys.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_pr_keys.py
 
 One PR is watched under one key, so a change is sent to its session once (it was sent twice: once as
 'owner/repo#N' from the session's PR list and once as 'repo#N' from its branch list).

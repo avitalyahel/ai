@@ -19,7 +19,7 @@
 ## Platforms, settings and input checks
 
 - **Platforms:** `watch.py` runs on macOS, Linux and Windows. It finds the Claude app's folder, the system keyring (macOS Keychain, Linux `secret-tool`, the Python `keyring` module elsewhere) and desktop notifications for the OS it's on. `sd` is bash, so on Windows use Git Bash or WSL. Starting at login is out of scope.
-- **Install and requirements:** see "Install" in the `sessions-watch` skill (`../SKILL.md`): a symlink to a separate `agent-skills` clone that stays on `main`, so updates are a `git pull`. Every round checks the requirements and reports anything missing on the "⚠ Input check" line.
+- **Install and requirements:** see "Install" in the `sessions-drive` skill (`../SKILL.md`): a symlink to a separate `agent-skills` clone that stays on `main`, so updates are a `git pull`. Every round checks the requirements and reports anything missing on the "⚠ Input check" line.
 - **Per-user settings:** `config.json` holds the two page URLs (filled in on the first refresh), `hideSessions`, `userName` and `slackUserId`. Three more keys are optional: `scheduledRuns` (see [Scheduled runs](#scheduled-runs)), `scans` and `scansGmailServer` (see [Scans Hub](#scans-hub)). Copy `config.example.json` to start. It's never shared.
 - **Input checks:** every round verifies the shape of each file `sd` reads: session histories, the app's metadata, the Cowork folder layout, `config.json`, `atlassian.conf`, `sd`'s own state files, the hub's doc snapshots and queue, and GitHub lookups. Warnings go to the round log, `work/health.txt`, and a "⚠ Input check" line on both pages.
 
@@ -130,7 +130,7 @@ Code sessions only, on this Mac.
 
 - **What:** Code sessions marked Done with no activity for 14 days: the transcript (`<id>.jsonl` and `<id>/`), file-history, todos and session-env. Only ids that are full UUIDs. Their clean, pushed or merged worktrees and branches, unless a newer session uses them.
 - **Listed only:** Home (Cowork) sessions and the artifacts the purged transcripts mention.
-- **Run:** `python3 -I ~/Claude/sessions-watch/purge_old.py` is a dry run; add `--apply` to delete. It needs `state.json`, so run `sd` once first.
+- **Run:** `python3 -I ~/Claude/sessions-drive/purge_old.py` is a dry run; add `--apply` to delete. It needs `state.json`, so run `sd` once first.
 - **Report:** `work/purge-report.txt`.
 
 ### Space reclaim
@@ -151,7 +151,7 @@ Code sessions only, on this Mac.
 
 ### Setting up the hub
 
-1. Open a new Code session in the app, in `~/Claude/sessions-watch`, and name it **Trackers Hub**.
+1. Open a new Code session in the app, in `~/Claude/sessions-drive`, and name it **Trackers Hub**.
 2. Paste the contents of `HUB.md` as its first message.
 3. It starts one feed, `watch.py hub-feed`, a Monitor that prints each waiting message and keeps a heartbeat. It also creates a recurring job that re-arms the feed every 25 minutes.
 
@@ -179,8 +179,8 @@ It is a second session, and not a job of the Trackers Hub, so that the Trackers 
 
 ### Setting up the Scans Hub
 
-1. Write the subagent definitions: `python3 -I ~/Claude/sessions-watch/watch.py scans-setup`. Run it with exactly this path: the paths in the files must match what `sd` uses, and the command refuses to run from another path. It writes `sd-classify` and `sd-publish` to `~/.claude/agents`, from the templates in `agents/`. A file there that `sd` did not write is never overwritten.
-2. Open a new Code session in `~/Claude/sessions-watch`, name it **Scans Hub**, and paste `SCANS.md` as its first message. It checks the limits of each subagent once, starts its feed (`watch.py hub-feed --role scans`) and a re-arm job, and replies "Scans Hub armed". Do this after step 1. If `~/.claude/agents` did not exist before the session started, restart the session.
+1. Write the subagent definitions: `python3 -I ~/Claude/sessions-drive/watch.py scans-setup`. Run it with exactly this path: the paths in the files must match what `sd` uses, and the command refuses to run from another path. It writes `sd-classify` and `sd-publish` to `~/.claude/agents`, from the templates in `agents/`. A file there that `sd` did not write is never overwritten.
+2. Open a new Code session in `~/Claude/sessions-drive`, name it **Scans Hub**, and paste `SCANS.md` as its first message. It checks the limits of each subagent once, starts its feed (`watch.py hub-feed --role scans`) and a re-arm job, and replies "Scans Hub armed". Do this after step 1. If `~/.claude/agents` did not exist before the session started, restart the session.
 3. For scans, add them to `config.json`, then disable the app's scheduled task of the same name:
 
    ```json
@@ -339,7 +339,7 @@ A coordinator session starts other sessions (for example, a session that starts 
 - **Which threads:** Slack messages a Code session posted (a `slack_send_message` result with its `message_link`), the thread of each; at most the 20 newest per session, from sessions active in the last 14 days. The newest session that posted in a thread owns it.
 - **Who reads them:** the Trackers Hub, in the same 10-minute docs check, with `slack_read_thread`. It writes only message ts values and sender names to `work/hub/docsnap/`, never message text.
 - **What sends the session a message:** new replies by someone other than you. The first check of a thread only records it.
-- **Pin a thread** to a session, also when the session is done (for example, waiting for a reply after all PRs merged): `python3 -I ~/Claude/sessions-watch/watch.py slack-watch <channel id> <thread ts> --session <Claude Code session id> [--days 14]`. Remove it with `slack-unwatch <channel id> <thread ts>`. Pins live in `work/hub/slack-pins.json` and expire after 14 days.
+- **Pin a thread** to a session, also when the session is done (for example, waiting for a reply after all PRs merged): `python3 -I ~/Claude/sessions-drive/watch.py slack-watch <channel id> <thread ts> --session <Claude Code session id> [--days 14]`. Remove it with `slack-unwatch <channel id> <thread ts>`. Pins live in `work/hub/slack-pins.json` and expire after 14 days.
 
 ### Opt-in watch list
 
@@ -364,7 +364,7 @@ Pages and docs are found automatically only for Code sessions active in the last
 
 ## Files
 
-All in `~/Claude/sessions-watch`.
+All in `~/Claude/sessions-drive`.
 
 | File | What it is |
 |---|---|
@@ -392,7 +392,7 @@ All in `~/Claude/sessions-watch`.
 
 ## Tests
 
-Run all of them with `for t in ~/Claude/sessions-watch/tests/test_*.py; do python3 -I "$t"; done`. They need no network, GitHub or app.
+Run all of them with `for t in ~/Claude/sessions-drive/tests/test_*.py; do python3 -I "$t"; done`. They need no network, GitHub or app.
 
 - `test_rules.py`: the Done rules (merged, parked, approved, closed, branches without PRs), scheduled runs never Waiting, DO_NOT_MERGE spellings, Self/Peer CR and Review labels, branch ownership (created or pushed, main checkout vs worktree), fork history, PR messages (reviews, comments, dismissed approvals, CI, commits, labels, conflicts) and the hub queue (delivery, acknowledgement, retention, size limit).
 - `test_input_checks.py`: every input format check and the per-OS requirements check.

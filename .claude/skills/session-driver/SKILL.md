@@ -17,15 +17,15 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
 ## Install (once per person)
 
 1. **Clone `agent-skills` once more, only for `sd`,** and keep that clone on `main`. Then a branch you check out for other work never changes the `sd` that runs:
-   `gh repo clone Axonius/agent-skills ~/git/agent-skills-sw`.
-   Updates: `git -C ~/git/agent-skills-sw pull`. Link this clone, not the installed plugin: the plugin cache folder changes on every plugin update.
-2. **Upgrade only: move an old copy away.** If `~/Claude/sessions-watch` is a real folder (an older install copied it), `ln` would put the link inside it and keep the old tool. Move your files over first, then the folder:
-   `T=~/git/agent-skills-sw/plugins/team/skills/session-driver/tool; for f in config.json atlassian.conf state.json work out; do [ -e ~/Claude/sessions-watch/$f ] && mv ~/Claude/sessions-watch/$f "$T/"; done; mv ~/Claude/sessions-watch ~/Claude/sessions-watch.old`.
-   Skip this step when `~/Claude/sessions-watch` does not exist or is already a link.
-3. **Link the tool:** `mkdir -p ~/Claude && ln -sfn ~/git/agent-skills-sw/plugins/team/skills/session-driver/tool ~/Claude/sessions-watch`.
+   `gh repo clone Axonius/agent-skills ~/git/agent-skills-sd`.
+   Updates: `git -C ~/git/agent-skills-sd pull`. Link this clone, not the installed plugin: the plugin cache folder changes on every plugin update.
+2. **Upgrade only: move an old copy away.** If `~/Claude/sessions-drive` is a real folder (an older install copied it), `ln` would put the link inside it and keep the old tool. Move your files over first, then the folder:
+   `T=~/git/agent-skills-sd/plugins/team/skills/session-driver/tool; for f in config.json atlassian.conf state.json work out; do [ -e ~/Claude/sessions-drive/$f ] && mv ~/Claude/sessions-drive/$f "$T/"; done; mv ~/Claude/sessions-drive ~/Claude/sessions-drive.old`.
+   Skip this step when `~/Claude/sessions-drive` does not exist or is already a link.
+3. **Link the tool:** `mkdir -p ~/Claude && ln -sfn ~/git/agent-skills-sd/plugins/team/skills/session-driver/tool ~/Claude/sessions-drive`.
    Your own files there (`config.json`, `atlassian.conf`, `state.json`, `out/`, `work/`) are git-ignored.
-4. **Add the command:** `mkdir -p ~/.local/bin && ln -sfn ~/Claude/sessions-watch/sd ~/.local/bin/sd`. Make sure `~/.local/bin` is on your `PATH`.
-5. **Personal settings:** `cp ~/Claude/sessions-watch/config.example.json ~/Claude/sessions-watch/config.json`.
+4. **Add the command:** `mkdir -p ~/.local/bin && ln -sfn ~/Claude/sessions-drive/sd ~/.local/bin/sd`. Make sure `~/.local/bin` is on your `PATH`.
+5. **Personal settings:** `cp ~/Claude/sessions-drive/config.example.json ~/Claude/sessions-drive/config.json`.
    - Fill in `userName` and `slackUserId`.
    - Leave `pages` empty: the first refresh creates both pages and saves their URLs.
 6. **Requirements, every OS:**
@@ -34,18 +34,18 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
    - `gh`, logged in to GitHub, and `git`;
    - on Windows, `bash` (Git Bash or WSL).
    Each round checks these; anything missing shows on the pages' "⚠ Input check" line.
-7. **Optional, Confluence:** `cp ~/Claude/sessions-watch/atlassian.conf.example ~/Claude/sessions-watch/atlassian.conf` and set your email. Store an API token in the system keyring under the service `sw-atlassian` (each command prompts for it):
-   - macOS: `security add-generic-password -s sw-atlassian -a <your email> -w`
-   - Linux (needs `libsecret-tools`): `secret-tool store --label=sw-atlassian service sw-atlassian account <your email>`
-   - Windows (needs `pip install keyring`): `python -c "import keyring, getpass; keyring.set_password('sw-atlassian', '<your email>', getpass.getpass())"`
+7. **Optional, Confluence:** `cp ~/Claude/sessions-drive/atlassian.conf.example ~/Claude/sessions-drive/atlassian.conf` and set your email. Store an API token in the system keyring under the service `sd-atlassian` (each command prompts for it):
+   - macOS: `security add-generic-password -s sd-atlassian -a <your email> -w`
+   - Linux (needs `libsecret-tools`): `secret-tool store --label=sd-atlassian service sd-atlassian account <your email>`
+   - Windows (needs `pip install keyring`): `python -c "import keyring, getpass; keyring.set_password('sd-atlassian', '<your email>', getpass.getpass())"`
    Without a token, the hub reads Confluence with its connector.
-8. **Check it:** `for t in ~/Claude/sessions-watch/tests/test_*.py; do python3 -I "$t"; done`.
+8. **Check it:** `for t in ~/Claude/sessions-drive/tests/test_*.py; do python3 -I "$t"; done`.
 
 ## Run
 
 - **Keep the loop running:** `sd --loop 5m` in a Terminal window. It collects every 5 minutes. When something changed, the refresh runs as subagents of the Scans Hub if it is running, and otherwise in a short Claude session.
-- **The Trackers Hub:** start a new Code session in the app in `~/Claude/sessions-watch`, name it "Trackers Hub", and paste `HUB.md` as its first message. It replies "Hub armed". After an app restart, open it and say "re-arm".
-- **The Scans Hub (optional):** run `python3 -I ~/Claude/sessions-watch/watch.py scans-setup`, then start a Code session in the app in `~/Claude/sessions-watch`, name it "Scans Hub", and paste `SCANS.md` as its first message. It replies "Scans Hub armed". After an app restart, open it and say "re-arm". Without it, `sd` starts a short Claude session for each refresh, as before.
+- **The Trackers Hub:** start a new Code session in the app in `~/Claude/sessions-drive`, name it "Trackers Hub", and paste `HUB.md` as its first message. It replies "Hub armed". After an app restart, open it and say "re-arm".
+- **The Scans Hub (optional):** run `python3 -I ~/Claude/sessions-drive/watch.py scans-setup`, then start a Code session in the app in `~/Claude/sessions-drive`, name it "Scans Hub", and paste `SCANS.md` as its first message. It replies "Scans Hub armed". After an app restart, open it and say "re-arm". Without it, `sd` starts a short Claude session for each refresh, as before.
 - **Recurring runs that still start sessions** (an app scheduled task): put the start of their titles in `scheduledRuns` in `config.json`, so they never show as Waiting, or move them to a scan (`tool/README.md`, "Scans Hub").
 - **Help:** `sd -h`.
 
@@ -53,9 +53,9 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
 
 | Need | Do |
 |---|---|
-| Mark a session done | `python3 -I ~/Claude/sessions-watch/watch.py done code <id, app id or title>` |
+| Mark a session done | `python3 -I ~/Claude/sessions-drive/watch.py done code <id, app id or title>` |
 | Are the hubs alive, what's waiting | `sd --hub` |
-| Turn on space reclaim | `echo on > ~/Claude/sessions-watch/work/reclaim.mode` |
+| Turn on space reclaim | `echo on > ~/Claude/sessions-drive/work/reclaim.mode` |
 
 ## Rules this tool relies on
 

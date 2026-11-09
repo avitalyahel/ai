@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_slack_watch.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_slack_watch.py
 
 Slack thread watching, on a temp pins file:
 - A posted message's link gives the thread to watch: a top-level post its own thread,

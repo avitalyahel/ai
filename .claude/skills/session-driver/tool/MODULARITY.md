@@ -45,7 +45,7 @@ Many functions both decide and write (JSON, logs, HTML). Separating pure decisio
 Split `watch.py` into a package without changing behavior:
 
 ```
-sessions-watch/
+sessions-drive/
   watch.py              # thin CLI entry point
   sw_lib/
     __init__.py
@@ -72,7 +72,7 @@ sessions-watch/
 
 - Removed remaining “correlation” team-specific references from skill cross-links and install paths.
 - Tightened peer-review tracking rules in `README.md` (shorter sentences, consistent terms, active voice).
-- Skill files (`pr-review`, `loop-self-review`, `loop-peer-reviewer`, `sessions-watch`) now use the generic name `pr-review` and generic path examples.
+- Skill files (`pr-review`, `loop-self-review`, `loop-peer-reviewer`, `sessions-drive`) now use the generic name `pr-review` and generic path examples.
 
 ## Other small notes
 

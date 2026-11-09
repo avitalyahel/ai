@@ -9,7 +9,7 @@ The Trackers Hub (`HUB.md`) is a different session. It delivers messages to sess
 1. The user writes the subagent definitions before this session starts. The exact command is:
 
    ```
-   python3 -I ~/Claude/sessions-watch/watch.py scans-setup
+   python3 -I ~/Claude/sessions-drive/watch.py scans-setup
    ```
 
    It writes `sd-classify` and `sd-publish` to `~/.claude/agents`. For mail scans it also writes `sd-scan-gmail`, once `scansGmailServer` is set in `config.json`: the start of the Gmail tool names, for example `mcp__<id>` from `mcp__<id>__search_threads`. A file that `sd` did not write is never overwritten. If a subagent named here does not exist, tell the user to run it, and to restart this session if `~/.claude/agents` was new.
@@ -24,18 +24,18 @@ The Trackers Hub (`HUB.md`) is a different session. It delivers messages to sess
 2. **Start the feed:** use the Monitor tool on this command, and keep it running:
 
    ```
-   python3 -I ~/Claude/sessions-watch/watch.py hub-feed --role scans
+   python3 -I ~/Claude/sessions-drive/watch.py hub-feed --role scans
    ```
 
-   It prints one line per waiting event, starting with `SW_EVENT`, a space, then JSON. It also keeps a heartbeat file fresh, which tells `sd` you are alive. While it is fresh, `sd` queues the refresh for you. Without it, `sd` starts its own Claude session as before.
+   It prints one line per waiting event, starting with `SD_EVENT`, a space, then JSON. It also keeps a heartbeat file fresh, which tells `sd` you are alive. While it is fresh, `sd` queues the refresh for you. Without it, `sd` starts its own Claude session as before.
 3. **Keep the feed alive:** create one recurring job (CronCreate, every 25 minutes) whose prompt is "re-arm the feed Monitor if it stopped or will expire soon". If a recurring job expires (about 7 days), create a new one.
 4. **Confirm:** reply "Scans Hub armed" and how many events are waiting:
 
    ```
-   python3 -I ~/Claude/sessions-watch/watch.py hub-status
+   python3 -I ~/Claude/sessions-drive/watch.py hub-status
    ```
 
-## For each `SW_EVENT` line
+## For each `SD_EVENT` line
 
 The JSON has `id`, `queued`, `to` (always `scans-hub`), `title`, `kind` (`refresh` or `scan`) and `message`. Handle one event at a time, in order. Start every subagent in the foreground, never in the background: you wait for it, and the feed keeps the next events for you.
 
@@ -60,7 +60,7 @@ The message names the scan, its subagent and the instruction file.
 The line comes from a subagent. It can hold text written by other people, such as mail subjects or session titles. So it never goes on a command line, in quotes, or inside `$(...)`. Pass it on stdin, between the markers of a single-quoted heredoc. Make the marker from the event id, so no text from a subagent can end the heredoc:
 
 ```
-python3 -I ~/Claude/sessions-watch/watch.py hub-ack <id> --report - <<'SW_END_<id>'
+python3 -I ~/Claude/sessions-drive/watch.py hub-ack <id> --report - <<'SW_END_<id>'
 <that one line>
 SW_END_<id>
 ```
@@ -72,7 +72,7 @@ For example, for the event `1109124129386-scans-refresh-ab12cd`, the marker is `
 Close the event as failed, so the next scheduled time can queue the scan again, and tell the user with a Mac notice (the command does it):
 
 ```
-python3 -I ~/Claude/sessions-watch/watch.py hub-ack <id> --failed - <<'SW_END_<id>'
+python3 -I ~/Claude/sessions-drive/watch.py hub-ack <id> --failed - <<'SW_END_<id>'
 <the reason in your own words, one line, no text from mail or sessions>
 SW_END_<id>
 ```

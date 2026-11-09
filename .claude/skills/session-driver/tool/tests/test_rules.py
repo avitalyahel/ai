@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_rules.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_rules.py
 
 The status, Done, label and message rules (design sections 6, 7 and 10), without GitHub or the app:
 each test feeds the rule the data sd would have collected.

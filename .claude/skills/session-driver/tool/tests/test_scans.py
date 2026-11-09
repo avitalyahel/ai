@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_scans.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_scans.py
 
 The Scans Hub (design section 3), on temp folders, without GitHub or the app:
 - The refresh goes to the Scans Hub only while its feed is alive, and only one refresh waits at a
@@ -329,7 +329,7 @@ class ScanTimes(TempHub):
                     "name": "inbox",
                     "times": list(times),
                     "prompt": path,
-                    "agent": "sw-scan-gmail",
+                    "agent": "sd-scan-gmail",
                 },
             ],
         }
@@ -354,7 +354,7 @@ class ScanTimes(TempHub):
         events = watch.hub_pending("scans")
         kinds = [(event["kind"], event["title"]) for event in events]
         self.assertEqual(kinds, [("scan", "inbox")])
-        self.assertIn("sw-scan-gmail", events[0]["message"])
+        self.assertIn("sd-scan-gmail", events[0]["message"])
         self.assertIn(os.path.join(self.tmp, self.PROMPT), events[0]["message"])
 
     def test_one_event_waits_at_a_time(self) -> None:
@@ -437,7 +437,7 @@ class ScanEntries(TempHub):
         "name": "inbox",
         "times": ["09:00"],
         "prompt": "p.md",
-        "agent": "sw-scan-gmail",
+        "agent": "sd-scan-gmail",
     }
 
     def test_a_good_entry_has_no_error(self) -> None:
@@ -665,7 +665,7 @@ class GuardFiles(unittest.TestCase):
         for path in (
             self.path("work/todo.json"),
             self.path("state.json"),
-            os.path.expanduser("~/.claude/agents/sw-publish.md"),
+            os.path.expanduser("~/.claude/agents/sd-publish.md"),
         ):
             with self.subTest(path):
                 self.assertFalse(watch.file_allowed("Write", path))
@@ -715,7 +715,7 @@ class GuardFiles(unittest.TestCase):
 class ScansSetup(TempHub):
     def setUp(self) -> None:
         super().setUp()
-        watch.DIR = watch.SW_HOME
+        watch.DIR = watch.SD_HOME
 
     def read(self, name: str) -> str:
         return read_text(os.path.join(watch.AGENTS_DIR, name))
@@ -727,42 +727,42 @@ class ScansSetup(TempHub):
         watch.DIR = "/some/clone/tool"
         result, out = self.run_setup()
         self.assertEqual(result, 1)
-        self.assertIn(f"python3 -I {watch.SW_HOME}/watch.py scans-setup", out)
+        self.assertIn(f"python3 -I {watch.SD_HOME}/watch.py scans-setup", out)
         self.assertFalse(os.path.exists(watch.AGENTS_DIR))
 
     def test_it_writes_the_classifier_and_the_publisher(self) -> None:
         self.run_setup()
-        self.assertEqual(sorted(os.listdir(watch.AGENTS_DIR)), ["sw-classify.md", "sw-publish.md"])
+        self.assertEqual(sorted(os.listdir(watch.AGENTS_DIR)), ["sd-classify.md", "sd-publish.md"])
 
     def test_it_skips_the_mail_agent_without_a_server_name(self) -> None:
         _, out = self.run_setup()
-        self.assertIn("Skipped sw-scan-gmail.md", out)
+        self.assertIn("Skipped sd-scan-gmail.md", out)
 
     def test_the_publisher_gets_the_bash_hook_with_this_folder(self) -> None:
         self.run_setup()
-        publish = self.read("sw-publish.md")
-        hook = f"command: 'python3 -I {watch.SW_HOME}/watch.py guard-bash || exit 2'"
+        publish = self.read("sd-publish.md")
+        hook = f"command: 'python3 -I {watch.SD_HOME}/watch.py guard-bash || exit 2'"
         self.assertIn(hook, publish)
         self.assertNotIn("{{", publish)
 
     def test_the_classifier_gets_the_file_hook_and_two_tools(self) -> None:
         self.run_setup()
-        classify = self.read("sw-classify.md")
+        classify = self.read("sd-classify.md")
         self.assertIn("tools: Read, Write", classify)
         self.assertIn('matcher: "Read|Write"', classify)
-        hook = f"command: 'python3 -I {watch.SW_HOME}/watch.py guard-files || exit 2'"
+        hook = f"command: 'python3 -I {watch.SD_HOME}/watch.py guard-files || exit 2'"
         self.assertIn(hook, classify)
 
     def test_a_quote_in_the_folder_name_is_doubled_for_yaml(self) -> None:
         self.assertEqual(watch.render_agent("'{{DIR}}'", None), f"'{watch.DIR}'")
-        watch.DIR = "/home/o'brien/Claude/sessions-watch"
+        watch.DIR = "/home/o'brien/Claude/sessions-drive"
         rendered = watch.render_agent("'{{DIR}}'", None)
-        self.assertEqual(rendered, "'/home/o''brien/Claude/sessions-watch'")
+        self.assertEqual(rendered, "'/home/o''brien/Claude/sessions-drive'")
 
     def test_the_mail_agent_has_four_gmail_tools_and_tool_search(self) -> None:
         watch.CONFIG = {"scansGmailServer": "mcp__abc-123"}
         self.run_setup()
-        text = self.read("sw-scan-gmail.md")
+        text = self.read("sd-scan-gmail.md")
         tools = text.split("tools:\n", 1)[1].split("disallowedTools:", 1)[0]
         expected = ["- ToolSearch"] + [
             f"- mcp__abc-123__{name}"
@@ -774,7 +774,7 @@ class ScansSetup(TempHub):
     def test_the_mail_agent_denies_every_tool_that_sends_drafts_trashes_or_deletes(self) -> None:
         watch.CONFIG = {"scansGmailServer": "mcp__abc-123"}
         self.run_setup()
-        text = self.read("sw-scan-gmail.md")
+        text = self.read("sd-scan-gmail.md")
         tools, denied = text.split("disallowedTools:", 1)
         for name in (
             "send_message",
@@ -793,13 +793,13 @@ class ScansSetup(TempHub):
             with self.subTest(bad):
                 watch.CONFIG = {"scansGmailServer": bad}
                 _, out = self.run_setup()
-                self.assertIn("Skipped sw-scan-gmail.md", out)
-                agent = os.path.join(watch.AGENTS_DIR, "sw-scan-gmail.md")
+                self.assertIn("Skipped sd-scan-gmail.md", out)
+                agent = os.path.join(watch.AGENTS_DIR, "sd-scan-gmail.md")
                 self.assertFalse(os.path.exists(agent))
 
     def test_a_file_sw_did_not_write_is_kept(self) -> None:
         os.makedirs(watch.AGENTS_DIR)
-        mine = os.path.join(watch.AGENTS_DIR, "sw-classify.md")
+        mine = os.path.join(watch.AGENTS_DIR, "sd-classify.md")
         write_text(mine, "my own agent\n")
         _, out = self.run_setup()
         self.assertEqual(read_text(mine), "my own agent\n")
@@ -807,11 +807,11 @@ class ScansSetup(TempHub):
 
     def test_a_file_sw_wrote_is_updated(self) -> None:
         os.makedirs(watch.AGENTS_DIR)
-        path = os.path.join(watch.AGENTS_DIR, "sw-publish.md")
+        path = os.path.join(watch.AGENTS_DIR, "sd-publish.md")
         write_text(path, f"{watch.AGENT_MARK}\nold copy\n")
         self.run_setup()
-        self.assertNotIn("old copy", self.read("sw-publish.md"))
-        self.assertIn(watch.AGENT_MARK, self.read("sw-publish.md"))
+        self.assertNotIn("old copy", self.read("sd-publish.md"))
+        self.assertIn(watch.AGENT_MARK, self.read("sd-publish.md"))
 
 
 class CommandArguments(TempHub):
@@ -1295,26 +1295,26 @@ class HookShellSafety(unittest.TestCase):
         return folder
 
     def test_both_commands_end_with_exit_2(self) -> None:
-        for template in ("sw-classify.md", "sw-publish.md"):
+        for template in ("sd-classify.md", "sd-publish.md"):
             with self.subTest(template):
                 self.assertTrue(self.hook_command(template, "/x").endswith("|| exit 2"))
 
     def test_a_crash_of_watch_py_blocks_the_bash_call(self) -> None:
         folder = self.folder_with_broken_config()
-        command = self.hook_command("sw-publish.md", folder)
+        command = self.hook_command("sd-publish.md", folder)
         payload = {"tool_name": "Bash", "tool_input": {"command": "id"}}
         self.assertEqual(self.run_hook(command, payload), 2)
 
     def test_a_crash_of_watch_py_blocks_the_file_call(self) -> None:
         folder = self.folder_with_broken_config()
-        command = self.hook_command("sw-classify.md", folder)
+        command = self.hook_command("sd-classify.md", folder)
         payload = {"tool_name": "Read", "tool_input": {"file_path": "/etc/hosts"}}
         self.assertEqual(self.run_hook(command, payload), 2)
 
     def test_a_missing_watch_py_blocks_the_call(self) -> None:
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, True)
-        command = self.hook_command("sw-publish.md", folder)
+        command = self.hook_command("sd-publish.md", folder)
         payload = {"tool_name": "Bash", "tool_input": {"command": "id"}}
         self.assertEqual(self.run_hook(command, payload), 2)
 
@@ -1356,7 +1356,7 @@ class SwLoop(unittest.TestCase):
     def setUp(self) -> None:
         self.home = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.home, True)
-        self.tool = os.path.join(self.home, "Claude", "sessions-watch")
+        self.tool = os.path.join(self.home, "Claude", "sessions-drive")
         bin_dir = os.path.join(self.home, ".local", "bin")
         os.makedirs(os.path.join(self.tool, "work"))
         os.makedirs(bin_dir)

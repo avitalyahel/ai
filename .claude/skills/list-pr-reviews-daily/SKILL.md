@@ -15,8 +15,8 @@ Produce a Slack-ready list of the pull requests the user reviewed on one day, fr
 ## Steps
 
 1. **Find `sd`.** This needs the `session-driver` skill installed and `sd` run at least once.
-   - Claude Code: `SW=~/Claude/sessions-watch`.
-   - Cowork: `~/Claude` is mounted under `/sessions/SESSION/mnt/Claude`, so `SW=/sessions/SESSION/mnt/Claude/sessions-watch`. If it isn't connected, ask for the folder `~/Claude (the folder that holds sessions-watch)` with the folder-request tool.
+   - Claude Code: `SD=~/Claude/sessions-drive`.
+   - Cowork: `~/Claude` is mounted under `/sessions/SESSION/mnt/Claude`, so `SW=/sessions/SESSION/mnt/Claude/sessions-drive`. If it isn't connected, ask for the folder `~/Claude (the folder that holds sessions-drive)` with the folder-request tool.
 
 2. **Get the reviews** (read-only; it only reads `sd`'s files):
 

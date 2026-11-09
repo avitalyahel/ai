@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_safety.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_safety.py
 
 The paths that delete files or message sessions, on temp folders and local git repos only
 (no network, GitHub or app):

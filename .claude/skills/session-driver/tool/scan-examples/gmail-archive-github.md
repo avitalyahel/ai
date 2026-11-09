@@ -1,5 +1,5 @@
 <!-- markdownlint-disable-file MD041 -->
-Example scan prompt for the sw-scan-gmail subagent. Copy it outside the repo, adapt the query, and name the copy in config.json "scans".
+Example scan prompt for the sd-scan-gmail subagent. Copy it outside the repo, adapt the query, and name the copy in config.json "scans".
 
 Archive GitHub notification mail in the inbox.
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Purge resources of sessions the Watch pages mark "done" with no activity for 14+ days.
 
-    python3 -I ~/Claude/sessions-watch/purge_old.py            dry run: report only, delete nothing
-    python3 -I ~/Claude/sessions-watch/purge_old.py --apply    delete, then write the report
+    python3 -I ~/Claude/sessions-drive/purge_old.py            dry run: report only, delete nothing
+    python3 -I ~/Claude/sessions-drive/purge_old.py --apply    delete, then write the report
 
 This script DELETES TRANSCRIPTS. It is separate from `sd`, which never touches transcripts.
 

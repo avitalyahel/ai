@@ -1,4 +1,4 @@
-"""Run: python3 -I ~/Claude/sessions-watch/tests/test_input_checks.py
+"""Run: python3 -I ~/Claude/sessions-drive/tests/test_input_checks.py
 
 Input format checks and requirements (design section 5): every file sd reads but doesn't control is checked,
 and a wrong shape becomes a warning instead of quietly wrong pages.
@@ -70,7 +70,7 @@ class InputChecks(unittest.TestCase):
         "name": "inbox",
         "times": ["09:00", "17:00"],
         "prompt": "~/p.md",
-        "agent": "sw-scan-gmail",
+        "agent": "sd-scan-gmail",
     }
 
     def test_config_scheduled_runs_and_scans_in_the_right_shape(self) -> None:

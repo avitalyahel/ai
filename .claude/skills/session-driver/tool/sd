@@ -2,8 +2,8 @@
 # sd — keeps the Home Sessions Watch and Code Sessions Watch pages current. Run `sd --help` for all of it.
 set -u
 
-DIR="$HOME/Claude/sessions-watch"
-DEFAULT_INTERVAL="${SW_INTERVAL:-15m}"
+DIR="$HOME/Claude/sessions-drive"
+DEFAULT_INTERVAL="${SD_INTERVAL:-15m}"
 export PATH="$HOME/.local/bin:$HOME/.claude/local:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
 
 show_help() { cat <<'HELP'
