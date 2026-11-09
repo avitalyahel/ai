@@ -1,27 +1,27 @@
-# sw — Sessions Watch
+# sd — Sessions Watch
 
-`sw` keeps the two pinned pages, **Home Sessions Watch** and **Code Sessions Watch**, current. It also cleans up after finished Code sessions and, through the **Trackers Hub**, messages Code sessions when their PRs, design pages or child sessions need them.
+`sd` keeps the two pinned pages, **Home Sessions Watch** and **Code Sessions Watch**, current. It also cleans up after finished Code sessions and, through the **Trackers Hub**, messages Code sessions when their PRs, design pages or child sessions need them.
 
 ## Usage
 
 | Command | What it does |
 |---|---|
-| `sw` | One round now, then exit. |
-| `sw --loop [INTERVAL]` | A round now, then one every `INTERVAL` while the window stays open. `Ctrl+C` stops it. `INTERVAL` is a number plus `s`, `m`, `h` or `d`; the default is `15m` and the shortest is `1m`. |
-| `sw --check` | Step 1 only (collect, no Claude): does anything need refreshing? It does not collect while a refresh is with the Scans Hub. |
-| `sw --status` | What the pages hold now. |
-| `sw --last` | How the last Claude refresh ended. |
-| `sw --trackers` | Code sessions that may still run their own PR trackers. |
-| `sw --hub` | Are the Trackers Hub and the Scans Hub alive, and which events are waiting for them. |
-| `sw --watch-list` | What's on the opt-in watch list. |
-| `sw --help`, `sw -h` | Short help. |
+| `sd` | One round now, then exit. |
+| `sd --loop [INTERVAL]` | A round now, then one every `INTERVAL` while the window stays open. `Ctrl+C` stops it. `INTERVAL` is a number plus `s`, `m`, `h` or `d`; the default is `15m` and the shortest is `1m`. |
+| `sd --check` | Step 1 only (collect, no Claude): does anything need refreshing? It does not collect while a refresh is with the Scans Hub. |
+| `sd --status` | What the pages hold now. |
+| `sd --last` | How the last Claude refresh ended. |
+| `sd --trackers` | Code sessions that may still run their own PR trackers. |
+| `sd --hub` | Are the Trackers Hub and the Scans Hub alive, and which events are waiting for them. |
+| `sd --watch-list` | What's on the opt-in watch list. |
+| `sd --help`, `sd -h` | Short help. |
 
 ## Platforms, settings and input checks
 
-- **Platforms:** `watch.py` runs on macOS, Linux and Windows. It finds the Claude app's folder, the system keyring (macOS Keychain, Linux `secret-tool`, the Python `keyring` module elsewhere) and desktop notifications for the OS it's on. `sw` is bash, so on Windows use Git Bash or WSL. Starting at login is out of scope.
+- **Platforms:** `watch.py` runs on macOS, Linux and Windows. It finds the Claude app's folder, the system keyring (macOS Keychain, Linux `secret-tool`, the Python `keyring` module elsewhere) and desktop notifications for the OS it's on. `sd` is bash, so on Windows use Git Bash or WSL. Starting at login is out of scope.
 - **Install and requirements:** see "Install" in the `sessions-watch` skill (`../SKILL.md`): a symlink to a separate `agent-skills` clone that stays on `main`, so updates are a `git pull`. Every round checks the requirements and reports anything missing on the "⚠ Input check" line.
 - **Per-user settings:** `config.json` holds the two page URLs (filled in on the first refresh), `hideSessions`, `userName` and `slackUserId`. Three more keys are optional: `scheduledRuns` (see [Scheduled runs](#scheduled-runs)), `scans` and `scansGmailServer` (see [Scans Hub](#scans-hub)). Copy `config.example.json` to start. It's never shared.
-- **Input checks:** every round verifies the shape of each file `sw` reads: session histories, the app's metadata, the Cowork folder layout, `config.json`, `atlassian.conf`, `sw`'s own state files, the hub's doc snapshots and queue, and GitHub lookups. Warnings go to the round log, `work/health.txt`, and a "⚠ Input check" line on both pages.
+- **Input checks:** every round verifies the shape of each file `sd` reads: session histories, the app's metadata, the Cowork folder layout, `config.json`, `atlassian.conf`, `sd`'s own state files, the hub's doc snapshots and queue, and GitHub lookups. Warnings go to the round log, `work/health.txt`, and a "⚠ Input check" line on both pages.
 
 ## Each round
 
@@ -33,7 +33,7 @@
    - Worktree cleanup and space reclaim (see [Cleanup](#cleanup)).
 2. **Nothing changed:** no Claude at all.
 3. **Something changed:** the refresh runs, and it reads only the changed sessions, rebuilds both pages and publishes them.
-   - **With the [Scans Hub](#scans-hub) running:** `sw` queues one refresh for it. The Scans Hub starts two Haiku subagents, one to classify and one to publish. No new session starts.
+   - **With the [Scans Hub](#scans-hub) running:** `sd` queues one refresh for it. The Scans Hub starts two Haiku subagents, one to classify and one to publish. No new session starts.
    - **Without it,** or when it hasn't finished the refresh for 15 minutes: a Claude Code session starts, as before.
      - Haiku at its default effort, in auto permission mode.
      - Tools: `Read`, `Write`, `ToolSearch`, `Artifact` and the `watch.py` commands only.
@@ -104,7 +104,7 @@ A recurring run, such as a scheduled task, has nobody to answer it. Without a ru
 
 ### Never shown
 
-- `sw`'s own sessions, including the *Trackers Hub* and the *Scans Hub*.
+- `sd`'s own sessions, including the *Trackers Hub* and the *Scans Hub*.
 - The *Session Watches Controller* session.
 
 ## Cleanup
@@ -126,11 +126,11 @@ Code sessions only, on this Mac.
 
 ### Purge of old sessions (manual, deletes transcripts)
 
-`purge_old.py` is separate from `sw`, and `sw` never runs it. Unlike everything above, it **deletes transcripts**.
+`purge_old.py` is separate from `sd`, and `sd` never runs it. Unlike everything above, it **deletes transcripts**.
 
 - **What:** Code sessions marked Done with no activity for 14 days: the transcript (`<id>.jsonl` and `<id>/`), file-history, todos and session-env. Only ids that are full UUIDs. Their clean, pushed or merged worktrees and branches, unless a newer session uses them.
 - **Listed only:** Home (Cowork) sessions and the artifacts the purged transcripts mention.
-- **Run:** `python3 -I ~/Claude/sessions-watch/purge_old.py` is a dry run; add `--apply` to delete. It needs `state.json`, so run `sw` once first.
+- **Run:** `python3 -I ~/Claude/sessions-watch/purge_old.py` is a dry run; add `--apply` to delete. It needs `state.json`, so run `sd` once first.
 - **Report:** `work/purge-report.txt`.
 
 ### Space reclaim
@@ -147,7 +147,7 @@ Code sessions only, on this Mac.
 
 ## Trackers Hub
 
-`sw` never resumes or starts sessions itself. It decides **what** a session needs to hear and **when**, and puts that message in a queue. The **Trackers Hub**, one Code session you keep open in the app, delivers each message to its session through the app's session messaging. The session gets it as a normal message, in the app.
+`sd` never resumes or starts sessions itself. It decides **what** a session needs to hear and **when**, and puts that message in a queue. The **Trackers Hub**, one Code session you keep open in the app, delivers each message to its session through the app's session messaging. The session gets it as a normal message, in the app.
 
 ### Setting up the hub
 
@@ -159,7 +159,7 @@ Code sessions only, on this Mac.
 
 - If the hub stopped (app restarted, Mac restarted), open it and say **re-arm**. That restores delivery for every session at once.
 - Messages wait in the queue while the hub is down; none are lost.
-- If the hub's heartbeat is older than 15 minutes and messages are waiting, `sw` shows a Mac notification: "Trackers Hub is down — N event(s) waiting. Open it and say re-arm." At most every 30 minutes.
+- If the hub's heartbeat is older than 15 minutes and messages are waiting, `sd` shows a Mac notification: "Trackers Hub is down — N event(s) waiting. Open it and say re-arm." At most every 30 minutes.
 
 ### Delivery
 
@@ -173,51 +173,51 @@ Code sessions only, on this Mac.
 
 ## Scans Hub
 
-Recurring work used to start a new session on each run: the app's scheduled tasks (for example a mail scan three times a day) and the refresh of every round with changes (about 50 a day). The **Scans Hub** is a second Code session you keep open in the app. It runs that work as **subagents**, so no run starts a session of its own. It is optional: without it, `sw` works as before.
+Recurring work used to start a new session on each run: the app's scheduled tasks (for example a mail scan three times a day) and the refresh of every round with changes (about 50 a day). The **Scans Hub** is a second Code session you keep open in the app. It runs that work as **subagents**, so no run starts a session of its own. It is optional: without it, `sd` works as before.
 
 It is a second session, and not a job of the Trackers Hub, so that the Trackers Hub stays read-only: it delivers messages and writes doc snapshots, and nothing more. The Scans Hub can use a state-changing connector (for example Gmail archiving), but only through a subagent with a short, fixed tool list.
 
 ### Setting up the Scans Hub
 
-1. Write the subagent definitions: `python3 -I ~/Claude/sessions-watch/watch.py scans-setup`. Run it with exactly this path: the paths in the files must match what `sw` uses, and the command refuses to run from another path. It writes `sw-classify` and `sw-publish` to `~/.claude/agents`, from the templates in `agents/`. A file there that `sw` did not write is never overwritten.
+1. Write the subagent definitions: `python3 -I ~/Claude/sessions-watch/watch.py scans-setup`. Run it with exactly this path: the paths in the files must match what `sd` uses, and the command refuses to run from another path. It writes `sd-classify` and `sd-publish` to `~/.claude/agents`, from the templates in `agents/`. A file there that `sd` did not write is never overwritten.
 2. Open a new Code session in `~/Claude/sessions-watch`, name it **Scans Hub**, and paste `SCANS.md` as its first message. It checks the limits of each subagent once, starts its feed (`watch.py hub-feed --role scans`) and a re-arm job, and replies "Scans Hub armed". Do this after step 1. If `~/.claude/agents` did not exist before the session started, restart the session.
 3. For scans, add them to `config.json`, then disable the app's scheduled task of the same name:
 
    ```json
    "scans": [{"name": "inbox-auto-archive", "times": ["09:00", "13:00", "17:00"],
-              "prompt": "~/Claude/scans/inbox-archive.md", "agent": "sw-scan-gmail"}],
+              "prompt": "~/Claude/scans/inbox-archive.md", "agent": "sd-scan-gmail"}],
    "scansGmailServer": "mcp__<id>"
    ```
 
-   - `prompt` is a file you own. It is the whole prompt of the subagent. A `~` is expanded, and a relative path starts in the `sw` folder. `scan-examples/` has one to copy. A missing file shows on the "⚠ Input check" line, and the scan is retried every round until the file is there.
-   - `agent` is the subagent that runs it. `sw-scan-gmail` is for mail: set `scansGmailServer` to the start of your Gmail tool names (`mcp__<id>` in `mcp__<id>__search_threads`) and run `scans-setup` again. Claude Code loads a changed agent file within seconds, when the folder existed at session start.
+   - `prompt` is a file you own. It is the whole prompt of the subagent. A `~` is expanded, and a relative path starts in the `sd` folder. `scan-examples/` has one to copy. A missing file shows on the "⚠ Input check" line, and the scan is retried every round until the file is there.
+   - `agent` is the subagent that runs it. `sd-scan-gmail` is for mail: set `scansGmailServer` to the start of your Gmail tool names (`mcp__<id>` in `mcp__<id>__search_threads`) and run `scans-setup` again. Claude Code loads a changed agent file within seconds, when the folder existed at session start.
 
 ### How a run goes
 
-- `sw` is the clock. Each round it queues a scan whose time has passed (`watch.py scans-due`). The first time it sees a scan it only records it; it runs at the next time. Only one event per scan waits at a time. A time missed while the Mac slept gives one catch-up run.
-- **The refresh:** after `collect` finds changes, `sw` queues one `refresh` event (`watch.py scans-queue refresh`). The Scans Hub starts `sw-classify` (tools `Read` and `Write`: the only subagent that reads raw session text written by others), then `sw-publish` (tools `Read`, `Bash`, `Artifact`, `ToolSearch`). A hook limits the Bash of `sw-publish` to `apply`, `published` and `set-url`, and a hook limits `sw-classify` to its three files. Each hook command ends with `|| exit 2`, so a crash of `watch.py` or a missing `python3` blocks the call too. The "changed sessions only" rule is unchanged: `collect` still decides before any event is queued.
-- **No collect during a refresh:** `collect` rewrites `work/todo.json` and deletes `work/classified.json`, which a running refresh reads and writes. So `sw` skips `collect` (`watch.py scans-busy`) while a refresh waits at the Scans Hub, for at most 15 minutes.
+- `sd` is the clock. Each round it queues a scan whose time has passed (`watch.py scans-due`). The first time it sees a scan it only records it; it runs at the next time. Only one event per scan waits at a time. A time missed while the Mac slept gives one catch-up run.
+- **The refresh:** after `collect` finds changes, `sd` queues one `refresh` event (`watch.py scans-queue refresh`). The Scans Hub starts `sd-classify` (tools `Read` and `Write`: the only subagent that reads raw session text written by others), then `sd-publish` (tools `Read`, `Bash`, `Artifact`, `ToolSearch`). A hook limits the Bash of `sd-publish` to `apply`, `published` and `set-url`, and a hook limits `sd-classify` to its three files. Each hook command ends with `|| exit 2`, so a crash of `watch.py` or a missing `python3` blocks the call too. The "changed sessions only" rule is unchanged: `collect` still decides before any event is queued.
+- **No collect during a refresh:** `collect` rewrites `work/todo.json` and deletes `work/classified.json`, which a running refresh reads and writes. So `sd` skips `collect` (`watch.py scans-busy`) while a refresh waits at the Scans Hub, for at most 15 minutes.
 - **A scan:** the Scans Hub reads the prompt file and starts the named subagent with it. The subagent answers with one line. The Scans Hub records it with `hub-ack <id> --report -` and passes the line on stdin, in a single-quoted heredoc, never on the command line: the line can hold mail subjects or session titles written by others. `watch.py` keeps only its first line, without control characters, cut to 300 characters.
 - **A failed run:** the Scans Hub records it with `hub-ack <id> --failed -`. The event is closed, the report line starts with `FAILED:`, you get a Mac notice, and the next scheduled time queues the scan again.
 - Subagents run in the foreground, one at a time. The Scans Hub keeps one line per run, so nothing builds up in its context.
 
 ### Limits of the Scans Hub
 
-- **Mail agent:** `sw-scan-gmail` has four Gmail tools (`search_threads`, `get_thread`, `list_labels`, `unlabel_thread`) and `ToolSearch`, which only loads those tools. It has no send, reply, forward, draft, trash, spam or label-delete tool. Archive means removing the INBOX label, which is reversible: the mail stays in All Mail.
+- **Mail agent:** `sd-scan-gmail` has four Gmail tools (`search_threads`, `get_thread`, `list_labels`, `unlabel_thread`) and `ToolSearch`, which only loads those tools. It has no send, reply, forward, draft, trash, spam or label-delete tool. Archive means removing the INBOX label, which is reversible: the mail stays in All Mail.
 - **Mail text is data.** The subagent ignores any request in it. The prompt file should fix the query and cap the threads per run (the example does). In the subagent, the worst case is a wrong archive.
 - **The Scans Hub itself** reads no mail, session text or page. It sees one line per run, and treats it as data. Its own Bash is not limited by a hook: it follows `SCANS.md`, and the report line only ever goes through stdin.
-- **Files:** `sw-classify` can read `work/todo.json` and its instruction file, and write `work/classified.json`. `sw-publish` can read any file, as the CLI refresh session could, and the Artifact tool is as open as before.
+- **Files:** `sd-classify` can read `work/todo.json` and its instruction file, and write `work/classified.json`. `sd-publish` can read any file, as the CLI refresh session could, and the Artifact tool is as open as before.
 - **Run reports:** `work/scans/<name>.log` and `work/scans/refresh.log` hold one line per run (counts and subjects only). Lines older than 14 days are removed.
 - **What the docs do not promise:** Claude Code's documentation does not say that a subagent hook also runs when the subagent is in the background, and it says a hook is not a hard permission rule. So the Scans Hub starts subagents in the foreground, and `SCANS.md` has it check each subagent's tool list once. A subagent file takes bare tool names only: a Bash command pattern can't be written in `tools`, which is why the hook exists.
 
 ### When the Scans Hub is down
 
-- **Not running:** while its feed's heartbeat is older than 2 minutes, `sw` starts the Claude session for the refresh, as before. Scan events wait in the queue; the next run archives everything that matches, and no mail is lost.
-- **Running but not finishing the refresh:** after 15 minutes `sw` starts the Claude session too. The 15 minutes count from the queue time, or from the end of the Scans Hub's previous event when that is later, because the Scans Hub handles one event at a time.
+- **Not running:** while its feed's heartbeat is older than 2 minutes, `sd` starts the Claude session for the refresh, as before. Scan events wait in the queue; the next run archives everything that matches, and no mail is lost.
+- **Running but not finishing the refresh:** after 15 minutes `sd` starts the Claude session too. The 15 minutes count from the queue time, or from the end of the Scans Hub's previous event when that is later, because the Scans Hub handles one event at a time.
 - **A failed refresh:** the Scans Hub closes it with `hub-ack <id> --failed -`. The next round starts the Claude session once, so the pages do not wait for a Scans Hub that keeps failing. Notices of failed runs come at most every 30 minutes.
-- **Notice:** with events waiting while the feed is quiet for 15 minutes, `sw` shows a Mac notification: "Scans Hub is down — N event(s) waiting. Open it and say re-arm." It also notifies when an event has waited 15 minutes while the feed is alive: a stuck scan would otherwise block the next one. At most every 30 minutes.
+- **Notice:** with events waiting while the feed is quiet for 15 minutes, `sd` shows a Mac notification: "Scans Hub is down — N event(s) waiting. Open it and say re-arm." It also notifies when an event has waited 15 minutes while the feed is alive: a stuck scan would otherwise block the next one. At most every 30 minutes.
 - **Re-arm:** open the Scans Hub and say **re-arm**. If its context fills up, the app compacts it. Nothing is lost, because every run is one subagent and all state is in files.
-- After updating `sw`, paste the new `SCANS.md` into the Scans Hub again and run `scans-setup` again: an older `SCANS.md` calls `hub-ack` with the report on the command line, which `sw` now refuses with a one-line error. Re-arm the Trackers Hub too. An old feed keeps its old code in memory and would hand it the Scans Hub's events (`to: scans-hub`). `HUB.md` tells the Trackers Hub to skip those events and never acknowledge them.
+- After updating `sd`, paste the new `SCANS.md` into the Scans Hub again and run `scans-setup` again: an older `SCANS.md` calls `hub-ack` with the report on the command line, which `sd` now refuses with a one-line error. Re-arm the Trackers Hub too. An old feed keeps its old code in memory and would hand it the Scans Hub's events (`to: scans-hub`). `HUB.md` tells the Trackers Hub to skip those events and never acknowledge them.
 
 ## PR watch
 
@@ -248,7 +248,7 @@ On your own PRs (open, not drafts, not yet approved), on workdays only (Sunday t
 
 ### How it's delivered
 
-- `sw` queues a message for the newest session tied to that PR, with what changed and the PR link.
+- `sd` queues a message for the newest session tied to that PR, with what changed and the PR link.
 - The Trackers Hub delivers it (see [Trackers Hub](#trackers-hub)).
 
 ### What the session is told
@@ -264,7 +264,7 @@ On your own PRs (open, not drafts, not yet approved), on workdays only (Sunday t
 
 ### Peer-review tracking rules
 
-These apply when a session tracks a **peer review** (someone else's PR). They come from the `pr-review` skill (step 7, "Track the user's manual comments") and the `loop-peer-reviewer-responses` skill ("Open the gap doc first"). `sw` and the hub only deliver messages; the session applies the rules.
+These apply when a session tracks a **peer review** (someone else's PR). They come from the `pr-review` skill (step 7, "Track the user's manual comments") and the `loop-peer-reviewer-responses` skill ("Open the gap doc first"). `sd` and the hub only deliver messages; the session applies the rules.
 
 #### Rule 1 — Open the gap doc first
 
@@ -298,8 +298,8 @@ These apply when a session tracks a **peer review** (someone else's PR). They co
 
 Sessions used to track PRs themselves: 5-minute background watchers, Monitor tasks, `/loop` and cron jobs (for example, the reviewer reminders in `loop-self-review-response`), and the app's PR monitor. They stop when the session closes or hits a time limit.
 
-- `sw --trackers` lists Code sessions active in the last 7 days that show signs of a tracker or have an open PR.
-- New runs of your skills (`loop-self-review-response`, `loop-peer-reviewer-responses`) still start their own watchers and cron jobs until the skills are told to rely on `sw` instead.
+- `sd --trackers` lists Code sessions active in the last 7 days that show signs of a tracker or have an open PR.
+- New runs of your skills (`loop-self-review-response`, `loop-peer-reviewer-responses`) still start their own watchers and cron jobs until the skills are told to rely on `sd` instead.
 
 ### Coordinator sessions
 
@@ -307,7 +307,7 @@ A coordinator session starts other sessions (for example, a session that starts 
 
 - **Who's a coordinator:** a Code session whose history shows sessions it started ("you started (local_…)") or messaged.
 - **Who its children are:** found through the app's metadata, which links each app session (`local_…`) to its Claude Code session.
-- **Message:** when a child finished a turn the coordinator hasn't seen (the child's last message is newer than the coordinator's), `sw` queues a message for the coordinator with each child's title and last reply.
+- **Message:** when a child finished a turn the coordinator hasn't seen (the child's last message is newer than the coordinator's), `sd` queues a message for the coordinator with each child's title and last reply.
 - **Guard rails**
   - waits 2 minutes after the child's turn, so the app can deliver it first;
   - never messages a running coordinator;
@@ -323,14 +323,14 @@ A coordinator session starts other sessions (for example, a session that starts 
 - **Guard rails:** the same as for PRs (running, 30-minute cooldown, 3 messages per round, first sight only recorded).
 - **Access:** Confluence's REST API, read-only, with TLS verification on.
   - `atlassian.conf` holds the site and your email (no secrets).
-  - The API token lives only in your system keyring, under the service `sw-atlassian` and your email as the account. Create a token at <https://id.atlassian.com/manage-profile/security/api-tokens> and store it as "Install" in `../SKILL.md` says; it's never written to a file or shown.
+  - The API token lives only in your system keyring, under the service `sd-atlassian` and your email as the account. Create a token at <https://id.atlassian.com/manage-profile/security/api-tokens> and store it as "Install" in `../SKILL.md` says; it's never written to a file or shown.
   - Without a token, the page watch is off and `work/prwatch.txt` says so.
 
 ### Google Docs and Claude Docs
 
 - **Which docs:** docs a Code session worked on (Google Docs or Claude Docs tool calls, and Google Docs links in its replies), from sessions active in the last 14 days. The newest session working on a doc owns it. The two Sessions Watch pages are never watched.
-- **Who reads them:** the Trackers Hub, every 10 minutes, with its connectors. `sw` can't read these itself. The hub writes only comment IDs and authors to `work/hub/docsnap/`.
-- **Confluence:** read the same way when there's no API token in the keyring. With a token, `sw` reads Confluence directly.
+- **Who reads them:** the Trackers Hub, every 10 minutes, with its connectors. `sd` can't read these itself. The hub writes only comment IDs and authors to `work/hub/docsnap/`.
+- **Confluence:** read the same way when there's no API token in the keyring. With a token, `sd` reads Confluence directly.
 - **What sends the session a message:** new comments or replies by someone other than you. The first check of a doc only records it.
 - **Labels:** editing or creating a doc counts as *Self Review*; only commenting counts as *Peer Review*.
 
@@ -343,7 +343,7 @@ A coordinator session starts other sessions (for example, a session that starts 
 
 ### Opt-in watch list
 
-Pages and docs are found automatically only for Code sessions active in the last 14 days. Entries in `work/extra-watch.json` (if present) override automatic ownership for the same page or doc. There is no CLI to add or remove entries. List them with `sw --watch-list`.
+Pages and docs are found automatically only for Code sessions active in the last 14 days. Entries in `work/extra-watch.json` (if present) override automatic ownership for the same page or doc. There is no CLI to add or remove entries. List them with `sd --watch-list`.
 
 - The entries live in `work/extra-watch.json`.
 - They override any automatically found owner for the same page or doc.
@@ -368,7 +368,7 @@ All in `~/Claude/sessions-watch`.
 
 | File | What it is |
 |---|---|
-| `sw` | This tool. |
+| `sd` | This tool. |
 | `watch.py` | Collect, apply, PR watch, cleanup. |
 | `prompt.md` | The refresh instructions for Claude. |
 | `state.json` | What the pages hold. |

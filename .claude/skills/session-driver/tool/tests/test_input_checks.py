@@ -1,6 +1,6 @@
 """Run: python3 -I ~/Claude/sessions-watch/tests/test_input_checks.py
 
-Input format checks and requirements (design section 5): every file sw reads but doesn't control is checked,
+Input format checks and requirements (design section 5): every file sd reads but doesn't control is checked,
 and a wrong shape becomes a warning instead of quietly wrong pages.
 
 - Session histories, app metadata, the Cowork folder, the state files, the hub's snapshots and queue.

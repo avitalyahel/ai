@@ -4,7 +4,7 @@
 
 `watch.py` is a single ~4,000-line script that handles collection, parsing, state merge, rendering, PR/branch analysis, worktree cleanup, space reclaim, hub queue, scans, and more. It works, but the size and mixed concerns make it hard to change safely.
 
-`sw` (bash) is a thin, readable dispatcher. `purge_old.py` is focused and well-scoped.
+`sd` (bash) is a thin, readable dispatcher. `purge_old.py` is focused and well-scoped.
 
 ## Main issues
 
@@ -66,7 +66,7 @@ sessions-watch/
 2. Move transcript parsing into `parse.py`.
 3. Move rendering into `render.py`.
 4. Move hub/scans into their own modules.
-5. Keep the public CLI commands unchanged so `sw` and the hubs do not need updates.
+5. Keep the public CLI commands unchanged so `sd` and the hubs do not need updates.
 
 ## Wording improvements applied
 
@@ -77,7 +77,7 @@ sessions-watch/
 ## Other small notes
 
 - `purge_old.py` is already modular enough for its purpose; keep it separate (it deletes transcripts).
-- The bash `sw` help text is clear; consider generating the long help from a shared source if the README and `--help` drift.
+- The bash `sd` help text is clear; consider generating the long help from a shared source if the README and `--help` drift.
 - Tests are well-structured by concern (`test_rules`, `test_safety`, `test_scans`, etc.). Keep that pattern when splitting modules.
 
 ## Next concrete steps (optional)

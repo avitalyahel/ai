@@ -4,7 +4,7 @@ The Scans Hub (design section 3), on temp folders, without GitHub or the app:
 - The refresh goes to the Scans Hub only while its feed is alive, and only one refresh waits at a
   time.
 - A refresh the hub has not finished for 15 minutes goes back to the CLI session (exit 3).
-- While the hub has a refresh, sw does not run collect (scans-busy).
+- While the hub has a refresh, sd does not run collect (scans-busy).
 - The two refresh prompts are cut from prompt.md: the classifier has no publish step, the publisher
   no transcript step.
 - Events of the Scans Hub never reach the Trackers Hub, and the other way round. Event ids are
@@ -20,7 +20,7 @@ The Scans Hub (design section 3), on temp folders, without GitHub or the app:
   the scan again.
 - A down Scans Hub, or a stuck event of it, notifies you once.
 - The hooks of the subagents allow only the fixed commands and files, and block on any error.
-- scans-setup writes the subagent definitions, only from the sw folder, never over a file that sw
+- scans-setup writes the subagent definitions, only from the sd folder, never over a file that sd
   did not write.
 - The hub's wait counts from its oldest waiting event or its last acknowledgement, so a refresh
   behind a long scan is not given up early, and a hub stuck on a scan is.
@@ -31,7 +31,7 @@ The Scans Hub (design section 3), on temp folders, without GitHub or the app:
   config.json.
 - Notices keep their line in the round log, and a notice with a backslash in it is still shown.
 - The commands take their arguments as documented, and main() calls the right command with them.
-- The sw loop starts no CLI session when the Scans Hub takes the refresh, and starts one when it
+- The sd loop starts no CLI session when the Scans Hub takes the refresh, and starts one when it
   does not.
 """
 
@@ -412,14 +412,14 @@ class ScanTimes(TempHub):
     def test_a_relative_prompt_path_starts_in_the_sw_folder(self) -> None:
         saved = watch.DIR
         self.addCleanup(setattr, watch, "DIR", saved)
-        watch.DIR = os.path.join(self.tmp, "sw")
+        watch.DIR = os.path.join(self.tmp, "sd")
         scan = {
             "name": "inbox",
             "times": ["09:00"],
             "prompt": "scans/x.md",
             "agent": "a",
         }
-        expected = os.path.join(self.tmp, "sw", "scans", "x.md")
+        expected = os.path.join(self.tmp, "sd", "scans", "x.md")
         self.assertEqual(watch.scan_prompt_path(scan), expected)
 
     def test_a_tilde_in_the_prompt_path_is_expanded(self) -> None:
@@ -1339,9 +1339,9 @@ class NotifyText(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("bash"), "needs bash")
 class SwLoop(unittest.TestCase):
-    """One round of the real `sw` script in a temp HOME, with a stub watch.py and a stub claude."""
+    """One round of the real `sd` script in a temp HOME, with a stub watch.py and a stub claude."""
 
-    SW = os.path.join(HERE, "..", "sw")
+    SW = os.path.join(HERE, "..", "sd")
     PROMPT = os.path.join(HERE, "..", "prompt.md")
     WATCH_STUB = (
         "import os, sys\n"
@@ -1360,7 +1360,7 @@ class SwLoop(unittest.TestCase):
         bin_dir = os.path.join(self.home, ".local", "bin")
         os.makedirs(os.path.join(self.tool, "work"))
         os.makedirs(bin_dir)
-        shutil.copy(self.SW, os.path.join(self.tool, "sw"))
+        shutil.copy(self.SW, os.path.join(self.tool, "sd"))
         shutil.copy(self.PROMPT, os.path.join(self.tool, "prompt.md"))
         write_text(os.path.join(self.tool, "watch.py"), self.WATCH_STUB)
         claude = os.path.join(bin_dir, "claude")
@@ -1371,7 +1371,7 @@ class SwLoop(unittest.TestCase):
         env = {"HOME": self.home, "PATH": os.environ["PATH"]}
         env.update({f"STUB_{name.upper()}": str(code) for name, code in stub_exit_codes.items()})
         result = subprocess.run(
-            args=["bash", os.path.join(self.tool, "sw")],
+            args=["bash", os.path.join(self.tool, "sd")],
             env=env,
             capture_output=True,
             timeout=120,

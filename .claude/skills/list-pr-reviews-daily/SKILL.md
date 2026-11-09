@@ -5,7 +5,7 @@ description: "List the PRs the user reviewed on a given day (peer PRs by default
 
 # PR reviews per day → Slack list
 
-Produce a Slack-ready list of the pull requests the user reviewed on one day, from their Claude Code sessions as tracked by the Sessions Watch tool (`sw`).
+Produce a Slack-ready list of the pull requests the user reviewed on one day, from their Claude Code sessions as tracked by the Sessions Watch tool (`sd`).
 
 ## Inputs
 
@@ -14,11 +14,11 @@ Produce a Slack-ready list of the pull requests the user reviewed on one day, fr
 
 ## Steps
 
-1. **Find `sw`.** This needs the `session-driver` skill installed and `sw` run at least once.
+1. **Find `sd`.** This needs the `session-driver` skill installed and `sd` run at least once.
    - Claude Code: `SW=~/Claude/sessions-watch`.
    - Cowork: `~/Claude` is mounted under `/sessions/SESSION/mnt/Claude`, so `SW=/sessions/SESSION/mnt/Claude/sessions-watch`. If it isn't connected, ask for the folder `~/Claude (the folder that holds sessions-watch)` with the folder-request tool.
 
-2. **Get the reviews** (read-only; it only reads `sw`'s files):
+2. **Get the reviews** (read-only; it only reads `sd`'s files):
 
    ```
    python3 -I "$SW/watch.py" reviews YYYY-MM-DD          # peer PRs

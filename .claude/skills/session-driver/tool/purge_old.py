@@ -4,7 +4,7 @@
     python3 -I ~/Claude/sessions-watch/purge_old.py            dry run: report only, delete nothing
     python3 -I ~/Claude/sessions-watch/purge_old.py --apply    delete, then write the report
 
-This script DELETES TRANSCRIPTS. It is separate from `sw`, which never touches transcripts.
+This script DELETES TRANSCRIPTS. It is separate from `sd`, which never touches transcripts.
 
 Code sessions: transcript (<id>.jsonl and <id>/), file-history, todos and session-env entries.
                Only sessions whose id is a full UUID.
@@ -286,7 +286,7 @@ def main(argv: list[str]) -> int:
     """Run the purge; dry run unless argv has --apply. Return the exit code."""
     state = load_state(STATE)
     if state is None:
-        print(f"No readable {short(STATE)} yet: run `sw` once first. Nothing was deleted.")
+        print(f"No readable {short(STATE)} yet: run `sd` once first. Nothing was deleted.")
         return 1
     report = Report("--apply" in argv)
     cutoff = (datetime.now(timezone.utc) - timedelta(days=DAYS)).strftime("%Y-%m-%dT%H:%M:%S")

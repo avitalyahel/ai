@@ -1,7 +1,7 @@
 """Run: python3 -I ~/Claude/sessions-watch/tests/test_rules.py
 
 The status, Done, label and message rules (design sections 6, 7 and 10), without GitHub or the app:
-each test feeds the rule the data sw would have collected.
+each test feeds the rule the data sd would have collected.
 
 - Done rules: when all branches and PRs are merged, parked, approved or closed, and when something is still open.
 - DO_NOT_MERGE spellings and the Self/Peer CR and Review labels.
