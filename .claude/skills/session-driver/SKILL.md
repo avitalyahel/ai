@@ -1,9 +1,9 @@
 ---
-name: sessions-watch
-description: Install, run and operate the Sessions Watch tool (sw), its Trackers Hub and its optional Scans Hub (recurring work as subagents), which keep two pinned Claude pages (Home Sessions Watch and Code Sessions Watch) current, clean up after finished Code sessions, and message Code sessions when their PRs, design docs or child sessions need them. Use when someone asks to set up sw, start the hub, re-arm it, explain a Sessions Watch status or label, or change what sw watches.
+name: session-driver
+description: Install, run and operate the Session Driver tool (sw), its Trackers Hub and its optional Scans Hub (recurring work as subagents), which keep two pinned Claude pages (Home Sessions Watch and Code Sessions Watch) current, clean up after finished Code sessions, and message Code sessions when their PRs, design docs or child sessions need them. Use when someone asks to set up sw, start the hub, re-arm it, explain a Sessions Watch status or label, or change what sw watches.
 ---
 
-# Sessions Watch (`sw`) and the Trackers Hub
+# Session Driver (`sw`) and the Trackers Hub
 
 `sw` is a small local tool, a bash script plus `watch.py`, that runs on your computer (macOS, Linux, or Windows with Git Bash or WSL).
 
@@ -20,9 +20,9 @@ The full behaviour is in `tool/README.md`. The hubs' instructions are in `tool/H
    `gh repo clone Axonius/agent-skills ~/git/agent-skills-sw`.
    Updates: `git -C ~/git/agent-skills-sw pull`. Link this clone, not the installed plugin: the plugin cache folder changes on every plugin update.
 2. **Upgrade only: move an old copy away.** If `~/Claude/sessions-watch` is a real folder (an older install copied it), `ln` would put the link inside it and keep the old tool. Move your files over first, then the folder:
-   `T=~/git/agent-skills-sw/plugins/team/skills/sessions-watch/tool; for f in config.json atlassian.conf state.json work out; do [ -e ~/Claude/sessions-watch/$f ] && mv ~/Claude/sessions-watch/$f "$T/"; done; mv ~/Claude/sessions-watch ~/Claude/sessions-watch.old`.
+   `T=~/git/agent-skills-sw/plugins/team/skills/session-driver/tool; for f in config.json atlassian.conf state.json work out; do [ -e ~/Claude/sessions-watch/$f ] && mv ~/Claude/sessions-watch/$f "$T/"; done; mv ~/Claude/sessions-watch ~/Claude/sessions-watch.old`.
    Skip this step when `~/Claude/sessions-watch` does not exist or is already a link.
-3. **Link the tool:** `mkdir -p ~/Claude && ln -sfn ~/git/agent-skills-sw/plugins/team/skills/sessions-watch/tool ~/Claude/sessions-watch`.
+3. **Link the tool:** `mkdir -p ~/Claude && ln -sfn ~/git/agent-skills-sw/plugins/team/skills/session-driver/tool ~/Claude/sessions-watch`.
    Your own files there (`config.json`, `atlassian.conf`, `state.json`, `out/`, `work/`) are git-ignored.
 4. **Add the command:** `mkdir -p ~/.local/bin && ln -sfn ~/Claude/sessions-watch/sw ~/.local/bin/sw`. Make sure `~/.local/bin` is on your `PATH`.
 5. **Personal settings:** `cp ~/Claude/sessions-watch/config.example.json ~/Claude/sessions-watch/config.json`.
