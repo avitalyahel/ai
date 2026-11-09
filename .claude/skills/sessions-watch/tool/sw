@@ -1,0 +1,206 @@
+#!/bin/bash
+# sw — keeps the Home Sessions Watch and Code Sessions Watch pages current. Run `sw --help` for all of it.
+set -u
+
+DIR="$HOME/Claude/sessions-watch"
+DEFAULT_INTERVAL="${SW_INTERVAL:-15m}"
+export PATH="$HOME/.local/bin:$HOME/.claude/local:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
+show_help() { cat <<'HELP'
+sw — keeps the Home and Code Sessions Watch pages current, cleans up after finished Code sessions,
+and wakes Code sessions when their PRs change.
+
+USAGE
+  sw                    one round now
+  sw --loop [INTERVAL]  a round now, then every INTERVAL (default 15m) while this window stays open
+  sw --check            collect only, no Claude: does anything need refreshing?
+  sw --status           what the pages hold now
+  sw --last             how the last Claude refresh ended
+  sw --trackers         Code sessions that may still run their own PR trackers
+  sw --stop-trackers    ask those sessions to stop them (sw takes over); asks before doing it
+  sw --watch-add KEY SESSION [TITLE]
+                        also watch a Confluence page or Claude/Google Doc for a session (Home sessions too);
+                        KEY: confluence:<page id> | cdoc:<doc id> | gdoc:<doc id>; SESSION: local_<app id> or session id
+  sw --watch-rm KEY     stop watching it
+  sw --watch-list       what is on the opt-in watch list
+  sw --hub              status only: are the Trackers Hub and the Scans Hub alive, and what is waiting for them
+                        (the hubs are sessions in the app, not options here)
+  sw --help, -h         this text
+
+EACH ROUND
+  - Collect sessions, branches and PRs on this Mac, without Claude.
+  - Only if something changed: the refresh runs as subagents of the Scans Hub when it is running (no new
+    session), else a short Claude session (Haiku) refreshes and publishes both pages.
+  - Scans in config.json ("scans") are queued for the Scans Hub at their times.
+  - Cleanup and PR watch run every round.
+
+DONE RULES
+  - Archived, or marked done by you -> Done.
+  - Code: every branch/PR merged (or someone else's PR you approved) -> Done; anything still open -> never Done.
+  - Home: Claude's reading decides; your done mark and archiving also count.
+
+CLEANUP (Code)
+  - Worktrees of merged work are removed, never forced, never with uncommitted files.
+  - Space reclaim when work/reclaim.mode is "on"; transcripts are never touched.
+
+TRACKERS HUB
+  - sw never resumes sessions itself. It queues each message; the Trackers Hub, one Code session kept open
+    in the app (instructions: HUB.md), delivers it to the session through the app's messaging.
+  - Hub quiet for 15 min with messages waiting -> a Mac notification; open the hub and say "re-arm".
+
+SCANS HUB
+  - One more Code session kept open in the app (instructions: SCANS.md). It runs the refresh and the scans
+    as subagents, so recurring work starts no session of its own. The Trackers Hub stays read-only.
+  - Not running, or it has not finished a refresh for 15 min: sw starts the Claude CLI session as before.
+
+PR WATCH
+  - Open PRs are watched until merged; a change by others (review, comments, CI, conflicts, dismissed
+    approval, merge) sends the session a message.
+  - Also wakes on new commits or label changes by others; after fixing review comments the session re-requests review.
+  - Your own PRs: a re-request after 1 day without review (Sunday to Thursday only). Reviewer reminders are off.
+  - Also wakes a coordinator when sessions it started finish a turn, and a session when a Confluence page
+    it works on gets comments or edits by others; Google Docs and Claude Docs too (the hub reads their
+    comments every 10 min with its connectors; Confluence the same way when there is no API token).
+  - Never messages a running session; at most one message per session every 30 min; no force-push; merges only if told.
+
+Details: ~/Claude/sessions-watch/README.md
+HELP
+}
+usage() { show_help; exit 1; }
+
+# Turn "90s", "5m", "2h", "1d" or "10" (minutes) into whole minutes, at least 1.
+to_minutes() {
+  local v="$1" n u
+  [[ "$v" =~ ^([0-9]+)([smhd]?)$ ]] || { echo "Interval must look like 1m, 5m, 2h or 1d (got: $v)." >&2; return 1; }
+  n=$((10#${BASH_REMATCH[1]})); u="${BASH_REMATCH[2]:-m}"
+  case "$u" in
+    s) n=$(( (n + 59) / 60 )) ;;
+    h) n=$(( n * 60 )) ;;
+    d) n=$(( n * 1440 )) ;;
+  esac
+  [ "$n" -lt 1 ] && n=1
+  echo "$n"
+}
+
+mins=""
+case "${1:-}" in
+  --check)
+    # A collect now would overwrite the files of a refresh that is still with the Scans Hub.
+    if python3 -I "$DIR/watch.py" scans-busy; then echo "A refresh is still with the Scans Hub: no collect now."; exit 0; fi
+    exec python3 -I "$DIR/watch.py" collect
+    ;;
+  --status) exec python3 -I "$DIR/watch.py" status ;;
+  --last)   exec python3 -I "$DIR/watch.py" last ;;
+  -h|--help) show_help; exit 0 ;;
+  --trackers) exec python3 -I "$DIR/watch.py" trackers ;;
+  --hub)      exec python3 -I "$DIR/watch.py" hub-status ;;
+  --watch-add)  shift; exec python3 -I "$DIR/watch.py" watch-add "$@" ;;
+  --watch-rm)   shift; exec python3 -I "$DIR/watch.py" watch-rm "$@" ;;
+  --watch-list) exec python3 -I "$DIR/watch.py" watch-list ;;
+  --stop-trackers)
+    python3 -I "$DIR/watch.py" trackers || exit 1
+    printf "\nQueue a message for each session above (the Trackers Hub delivers it) asking it to stop its own PR trackers? [y/N] "
+    read -r ans
+    case "$ans" in y|Y|yes) exec python3 -I "$DIR/watch.py" trackers --stop ;; *) echo "Nothing done."; exit 0 ;; esac
+    ;;
+  --loop)
+    requested="${2:-$DEFAULT_INTERVAL}"
+    mins=$(to_minutes "$requested") || exit 1
+    if [ "${mins}m" != "$requested" ]; then echo "Refreshing every $mins minute(s) (requested $requested; 1 minute is the shortest)."; fi
+    ;;
+  "") ;;
+  *) usage ;;
+esac
+
+# Requirements (all OSes; on Windows run sw from Git Bash or WSL). watch.py also reports missing tools
+# on the pages' "Input check" line.
+command -v python3 >/dev/null || { echo "python3 not found on PATH (Python 3.8 or newer is needed)."; exit 1; }
+command -v gh >/dev/null || echo "Warning: gh (GitHub CLI) not found on PATH: PR states and the PR watch won't work."
+CLAUDE=$(command -v claude) || { echo "claude command not found on PATH."; exit 1; }
+cd "$DIR" || exit 1
+mkdir -p "$DIR/work"
+
+# Haiku at its default effort reads and sorts the sessions (tested against Sonnet, both at
+# default effort, on 33 real sessions: same status on 30, same incomplete sessions caught).
+# No effort flag is passed, and an effort level exported in your shell is cleared so it
+# doesn't leak in.
+unset CLAUDE_CODE_EFFORT_LEVEL
+
+LOG="$DIR/work/sw.log"
+# Every line goes to the window and to work/sw.log, with the time.
+log() { printf '%s %s\n' "$(date '+%H:%M:%S')" "$*" | tee -a "$LOG"; }
+log_lines() { while IFS= read -r ln; do [ -n "$ln" ] && log "  $ln"; done; }
+
+refresh_once() {
+  local pre prompt n out rc
+  log "── Round started"
+  # A refresh the Scans Hub is still working on reads work/todo.json and writes work/classified.json.
+  # A second collect now would overwrite them, so this round does not collect.
+  if python3 -I "$DIR/watch.py" scans-busy; then
+    log "Pages: the Scans Hub is still refreshing; no collect this round."
+    return 0
+  fi
+  # Skip Claude entirely when nothing changed.
+  pre=$(python3 -I "$DIR/watch.py" collect 2>&1) || { printf '%s\n' "$pre" | log_lines; log "Collect failed."; return 1; }
+  # The collect summary: sessions, archive, branches, worktrees, space reclaim (not the per-session list).
+  printf '%s\n' "$pre" | grep -E '^(Inputs|Hub|Archived|Worktrees|Reclaim|Code|Home|Started)' | sed 's/ (archive state unknown.*//' | log_lines
+  if printf '%s\n' "$pre" | grep -q '^NO_CHANGES'; then
+    log "Pages: no changes, Claude not started."
+    return 0
+  fi
+  n=$(printf '%s\n' "$pre" | sed -n 's/^TODO \([0-9]*\).*/\1/p' | head -1)
+  # With the Scans Hub running (SCANS.md) the refresh is queued for it and runs as subagents: no new session.
+  # Without it, or when it does not finish the refresh, a short Claude CLI session does the same work.
+  out=$(python3 -I "$DIR/watch.py" scans-queue refresh "${n:-0}" 2>&1); rc=$?
+  printf '%s\n' "$out" | log_lines
+  [ "$rc" -eq 0 ] && return 0
+  log "Pages: ${n:-0} changed session(s); opening a Claude session (Haiku) to refresh and publish..."
+  prompt="$(sed "s|{{DIR}}|$DIR|g" "$DIR/prompt.md")
+
+6. Last step, always, even if an earlier step failed: after your one-line reply, run: python3 -I $DIR/watch.py finish
+   It closes this session."
+  # sh writes its own PID and then execs Claude Code, which keeps that PID, so
+  # `watch.py finish` can close exactly this session. Claude runs in the foreground of this window.
+  # The prompt goes first: --allowedTools takes a list and would swallow anything after it.
+  # Auto mode: Claude Code approves routine actions itself and still stops on risky ones.
+  # preferredNotifChannel=notifications_disabled turns off Claude Code's desktop alerts
+  # for this session only; your other sessions keep their own setting.
+  sh -c 'echo $$ > "$0"; shift; exec "$@"' "$DIR/work/claude.pid" _ \
+    "$CLAUDE" "$prompt" --model haiku --permission-mode auto \
+    --settings '{"preferredNotifChannel":"notifications_disabled"}' \
+    --allowedTools "Read" "Write" "ToolSearch" "Artifact" \
+      "Bash(python3 -I $DIR/watch.py collect)" \
+      "Bash(python3 -I $DIR/watch.py apply)" \
+      "Bash(python3 -I $DIR/watch.py published home)" \
+      "Bash(python3 -I $DIR/watch.py published code)" \
+      "Bash(python3 -I $DIR/watch.py finish)" \
+      "Bash(python3 -I $DIR/watch.py set-url:*)"
+  rm -f "$DIR/work/claude.pid"
+  # Claude Code prints "Resume this session with: claude --resume <id>" when the refresh session closes.
+  # That session is disposable; the line can be ignored.
+  python3 -I "$DIR/watch.py" status | sed 's/^/Pages now: /' | log_lines
+}
+
+# PR watch: wake a Code session when its open PR changed (reviews, comments, CI, conflicts, merge).
+pr_watch() { python3 -I "$DIR/watch.py" prwatch 2>&1 | log_lines; }
+hub_line() { python3 -I "$DIR/watch.py" hub-line | log_lines; }
+# Scans: queue a scan for the Scans Hub when one of its scheduled times (config.json "scans") has passed.
+scans_due() { python3 -I "$DIR/watch.py" scans-due 2>&1 | log_lines; }
+
+if [ -z "$mins" ]; then
+  refresh_once; rc=$?
+  pr_watch
+  scans_due
+  hub_line
+  exit $rc
+fi
+
+log "sw --loop: a round every $mins minute(s). Log: ${LOG/#$HOME/~}. Ctrl+C stops."
+while true; do
+  refresh_once
+  pr_watch
+  scans_due
+  hub_line
+  log "Next round at $(date -v+${mins}M '+%H:%M' 2>/dev/null || date '+%H:%M') (every $mins min). Ctrl+C stops."
+  sleep $(( mins * 60 ))
+done

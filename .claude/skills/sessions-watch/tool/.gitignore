@@ -1,0 +1,8 @@
+# Per-user and runtime files: never commit
+config.json
+atlassian.conf
+state.json
+out/
+work/
+__pycache__/
+*.tmp
