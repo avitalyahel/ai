@@ -3426,48 +3426,6 @@ def extra_owners(state, cache=None):
     return out
 
 
-def resolve_session(arg, cache=None):
-    """SESSION argument -> (Claude Code session id, app session id). Accepts a local_ app id or a session id."""
-    metas = session_metas(cache)
-    if arg.startswith("local_"):
-        clis = load_json(APP_CLI_PATH, {}).get(arg) or load_json(APP_IDS_PATH, {}).get(arg) or []
-        found = [c for c in clis if c in metas]
-        if not found:  # a Home session: its folder is named after the app id
-            found = [sid for sid, (p, _, _) in metas.items()
-                     if ("/" + arg + "/") in p or ("/" + arg[6:14] + "/") in p]
-        if not found:
-            return None, arg
-        return max(found, key=lambda c: metas[c][2].get("lastTs") or ""), arg
-    return (arg if arg in metas else None), app_id_of(arg)
-
-
-def cmd_watch_add(key, session, title=None):
-    if not key.startswith(EXTRA_KINDS) or not key.split(":", 1)[1]:
-        print("KEY must look like confluence:<page id>, cdoc:<doc id> or gdoc:<doc id>.")
-        return 1
-    sid, to = resolve_session(session)
-    if not sid:
-        print("Could not find a session for %s in sw's session history." % session)
-        return 1
-    meta = session_metas().get(sid, (None, 0, {}))[2]
-    db = load_json(EXTRA_WATCH, {}) or {}
-    db[key] = {"sid": sid, "title": title or meta.get("title") or sid[:8], "added": now_iso(), "to": to}
-    save_json(EXTRA_WATCH, db)
-    print("Watching %s for '%s' (session %s%s)." % (key, db[key]["title"], sid, ", app " + to if to else
-                                                  ", no app id: the hub can't message it"))
-    return 0
-
-
-def cmd_watch_rm(key):
-    db = load_json(EXTRA_WATCH, {}) or {}
-    if db.pop(key, None) is None:
-        print("Not on the watch list: %s" % key)
-        return 1
-    save_json(EXTRA_WATCH, db)
-    print("Removed %s." % key)
-    return 0
-
-
 def cmd_watch_list():
     db = load_json(EXTRA_WATCH, {}) or {}
     if not db:
@@ -4027,10 +3985,6 @@ def main(argv):
         return cmd_guard_bash()
     if cmd == "guard-files":
         return cmd_guard_files()
-    if cmd == "watch-add" and len(argv) >= 4:
-        return cmd_watch_add(argv[2], argv[3], " ".join(argv[4:]) or None)
-    if cmd == "watch-rm" and len(argv) == 3:
-        return cmd_watch_rm(argv[2])
     if cmd == "watch-list":
         return cmd_watch_list()
     if cmd == "reviews" and len(argv) >= 3:

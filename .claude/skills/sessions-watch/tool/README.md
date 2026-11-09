@@ -13,8 +13,6 @@
 | `sw --last` | How the last Claude refresh ended. |
 | `sw --trackers` | Code sessions that may still run their own PR trackers. |
 | `sw --hub` | Are the Trackers Hub and the Scans Hub alive, and which events are waiting for them. |
-| `sw --watch-add KEY SESSION [TITLE]` | Also watch a Confluence page or a Claude/Google Doc for a session, Home sessions included. See [Opt-in watch list](#opt-in-watch-list). |
-| `sw --watch-rm KEY` | Stop watching it. |
 | `sw --watch-list` | What's on the opt-in watch list. |
 | `sw --help`, `sw -h` | Short help. |
 
@@ -345,19 +343,13 @@ A coordinator session starts other sessions (for example, a session that starts 
 
 ### Opt-in watch list
 
-Pages and docs are found automatically only for Code sessions active in the last 14 days. To watch one for any other session, including a **Home (Cowork) session**, add it by hand.
+Pages and docs are found automatically only for Code sessions active in the last 14 days. Entries in `work/extra-watch.json` (if present) override automatic ownership for the same page or doc. There is no CLI to add or remove entries. List them with `sw --watch-list`.
 
-- **Add:** `sw --watch-add KEY SESSION [TITLE]`
-  - `KEY`: `confluence:<page id>`, `cdoc:<doc id>` or `gdoc:<doc id>`.
-  - `SESSION`: the session's app id (`local_…`) or its Claude Code session id. An app id is mapped to the session through the app's records, or the Home session folder named after it.
-  - `TITLE`: optional; defaults to the session's title.
-- **Remove:** `sw --watch-rm KEY`. **List:** `sw --watch-list`.
-- **How it's used:**
-  - The entries live in `work/extra-watch.json`.
-  - They override any automatically found owner for the same page or doc.
-  - There's no 14-day limit, and a Done session still gets its messages. Only archived sessions (Code or Home) are skipped.
-  - Confluence pages are read directly when an API token is set, otherwise by the hub. Claude and Google Docs are always read by the hub.
-  - Messages go to the session's app id, so Home sessions get them in the app like Code sessions do.
+- The entries live in `work/extra-watch.json`.
+- They override any automatically found owner for the same page or doc.
+- There's no 14-day limit, and a Done session still gets its messages. Only archived sessions (Code or Home) are skipped.
+- Confluence pages are read directly when an API token is set, otherwise by the hub. Claude and Google Docs are always read by the hub.
+- Messages go to the session's app id, so Home sessions get them in the app like Code sessions do.
 
 ### Records
 

@@ -17,10 +17,6 @@ USAGE
   sw --status           what the pages hold now
   sw --last             how the last Claude refresh ended
   sw --trackers         Code sessions that may still run their own PR trackers
-  sw --watch-add KEY SESSION [TITLE]
-                        also watch a Confluence page or Claude/Google Doc for a session (Home sessions too);
-                        KEY: confluence:<page id> | cdoc:<doc id> | gdoc:<doc id>; SESSION: local_<app id> or session id
-  sw --watch-rm KEY     stop watching it
   sw --watch-list       what is on the opt-in watch list
   sw --hub              status only: are the Trackers Hub and the Scans Hub alive, and what is waiting for them
                         (the hubs are sessions in the app, not options here)
@@ -92,9 +88,6 @@ case "${1:-}" in
   --last)   exec python3 -I "$DIR/watch.py" last ;;
   -h|--help) show_help; exit 0 ;;
   --trackers) exec python3 -I "$DIR/watch.py" trackers ;;
-  --hub)      exec python3 -I "$DIR/watch.py" hub-status ;;
-  --watch-add)  shift; exec python3 -I "$DIR/watch.py" watch-add "$@" ;;
-  --watch-rm)   shift; exec python3 -I "$DIR/watch.py" watch-rm "$@" ;;
   --watch-list) exec python3 -I "$DIR/watch.py" watch-list ;;
   --loop)
     requested="${2:-$DEFAULT_INTERVAL}"
